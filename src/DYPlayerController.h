@@ -2,7 +2,7 @@
 #ifndef DY_PLAYER_CONTROLLER_H
 #define DY_PLAYER_CONTROLLER_H
 
-#include "PlayerController.h"
+#include "BauklankPlayerController.h"
 #include <SoftwareSerial.h>
 #include <DYPlayerArduino.h> // https://github.com/SnijderC/dyplayer
 

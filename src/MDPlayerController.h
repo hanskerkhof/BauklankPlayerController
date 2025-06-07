@@ -2,7 +2,7 @@
 #ifndef MD_PLAYER_CONTROLLER_H
 #define MD_PLAYER_CONTROLLER_H
 
-#include "PlayerController.h"
+#include "BauklankPlayerController.h"
 #include <SoftwareSerial.h>
 
 

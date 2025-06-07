@@ -1,4 +1,4 @@
-// PlayerController.h
+// BauklankPlayerController.h
 #ifndef PLAYER_CONTROLLER_H
 #define PLAYER_CONTROLLER_H
 

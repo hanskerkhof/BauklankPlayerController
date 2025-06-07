@@ -2,7 +2,7 @@
 #ifndef DFROBOT_PLAYER_CONTROLLER_H
 #define DFROBOT_PLAYER_CONTROLLER_H
 
-#include "PlayerController.h"
+#include "BauklankPlayerController.h"
 #include <SoftwareSerial.h>
 // MAKE SURE YOU ARE USING VERSION 1.0.5 OF THE DFRobotDFPlayerMini LIBRARY!!
 #include <DFRobotDFPlayerMini.h> // Include the DFRobot library
