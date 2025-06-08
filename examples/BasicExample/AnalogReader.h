@@ -59,28 +59,56 @@ public:
     _avgCalculator.begin();
   }
 
-void begin() {
-  Serial.println("AnalogReader: Initializing...");
+  void begin() {
+    Serial.println("AnalogReader: Initializing...");
 
-  // Fill the moving average with multiple readings
-  for (int i = 0; i < _numSamples; i++) {
-    int rawValue = analogRead(_pin);
-    _avgCalculator.reading(rawValue);
-    Serial.printf("AnalogReader: Filling average, iteration %d/%d, raw value: %d\n", i + 1, _numSamples, rawValue);
-    delay(1); // Short delay to allow for slight variations in readings
+    // Fill the moving average with multiple readings
+    for (int i = 0; i < _numSamples; i++) {
+      int rawValue = analogRead(_pin);
+      _avgCalculator.reading(rawValue);
+      Serial.printf("AnalogReader: Filling average, iteration %d/%d, raw value: %d\n", i + 1, _numSamples, rawValue);
+      delay(1);  // Short delay to allow for slight variations in readings
+    }
+
+    int averageRaw = _avgCalculator.getAvg();
+    int mappedValue = map(averageRaw, 0, 1023, _minValue, _maxValue);
+    _lastMappedValue = mappedValue;
+
+    Serial.printf("AnalogReader: Initialization complete. Final average: %d (raw), mapped to: %d\n", averageRaw, mappedValue);
+    // Call the callback with the initial mapped value
+    if (_callback) {
+      _callback(mappedValue);
+    }
   }
 
-  int averageRaw = _avgCalculator.getAvg();
-  int mappedValue = map(averageRaw, 0, 1023, _minValue, _maxValue);
-  _lastMappedValue = mappedValue;
-
-  Serial.printf("AnalogReader: Initialization complete. Final average: %d (raw), mapped to: %d\n", averageRaw, mappedValue);
-// Call the callback with the initial mapped value
-  if (_callback) {
-    _callback(mappedValue);
-  }
-}
-
+  //  void update() {
+  //    unsigned long currentTime = millis();
+  //    if (currentTime - _lastReadTime >= _readInterval) {
+  //      _lastReadTime = currentTime;
+  //      int rawValue = analogRead(_pin);
+  //      int averageRaw = _avgCalculator.reading(rawValue);
+  //      int mappedValue = map(averageRaw, 0, 1023, _minValue, _maxValue);
+  //
+  //      if (mappedValue != _lastMappedValue) {
+  //        unsigned long timeSinceLastChange = currentTime - _lastChangeTime;
+  //        if (timeSinceLastChange >= _debounceInterval) {
+  //          _lastMappedValue = mappedValue;
+  //          _lastChangeTime = currentTime;
+  //          if (_callback) {
+  //            _callback(mappedValue);
+  //          }
+  //        } else {
+  //          _quickChangeCounter++;
+  //          if (currentTime - _lastDebugPrintTime >= 1000) {
+  //            Serial.printf("Analog value changing too quickly! %d quick changes in the last second. Last change: %lu ms ago\n",
+  //                          _quickChangeCounter, timeSinceLastChange);
+  //            _lastDebugPrintTime = currentTime;
+  //            _quickChangeCounter = 0;
+  //          }
+  //        }
+  //      }
+  //    }
+  //  }
   void update() {
     unsigned long currentTime = millis();
     if (currentTime - _lastReadTime >= _readInterval) {
@@ -92,13 +120,17 @@ void begin() {
       if (mappedValue != _lastMappedValue) {
         unsigned long timeSinceLastChange = currentTime - _lastChangeTime;
         if (timeSinceLastChange >= _debounceInterval) {
+          // Value has changed and debounce period has passed
           _lastMappedValue = mappedValue;
           _lastChangeTime = currentTime;
           if (_callback) {
             _callback(mappedValue);
           }
+          _pendingCallback = false;  // [NEW] Reset the pending callback flag
         } else {
+          // Value has changed but within debounce period
           _quickChangeCounter++;
+          _pendingCallback = true;  // [NEW] Set the pending callback flag
           if (currentTime - _lastDebugPrintTime >= 1000) {
             Serial.printf("Analog value changing too quickly! %d quick changes in the last second. Last change: %lu ms ago\n",
                           _quickChangeCounter, timeSinceLastChange);
@@ -106,11 +138,16 @@ void begin() {
             _quickChangeCounter = 0;
           }
         }
+      } else if (_pendingCallback && (currentTime - _lastChangeTime >= _debounceInterval)) {
+        // [NEW] Debounce period has passed since the last change, and we have a pending callback
+        if (_callback) {
+          _callback(mappedValue);
+        }
+        _pendingCallback = false;  // [NEW] Reset the pending callback flag after calling
       }
     }
   }
-
-  void setCallback(std::function<void(int)> callback) {
+    void setCallback(std::function<void(int)> callback) {
     _callback = callback;
   }
 
@@ -132,6 +169,7 @@ private:
   unsigned long _lastDebugPrintTime = 0;
   int _quickChangeCounter = 0;
   int _numSamples;  // Add this line to declare _numSamples
+  bool _pendingCallback = false; // [NEW] Flag to track if a callback is pending after debounce
 };
 
 #endif  // ANALOG_READER_H

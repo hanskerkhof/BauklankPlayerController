@@ -27,12 +27,15 @@
   DFRobotPlayerController player(DF_PLAYER_RX_PIN, DF_PLAYER_TX_PIN);
 #endif
 
+
+#define MAX_SOUND_INDEX 14
 int soundIndex = 1;
-uint8_t volume = 100;
+uint8_t playerVolume;
+
 // static uint32_t lastSoundPlayedTime = 0;
 // Define minutes and seconds
 const uint8_t minutes = 0;
-const uint8_t seconds = 20;
+const uint8_t seconds = 3;
 static const uint32_t trackDurationMs = (minutes * 60 + seconds) * 1000;
 
 #define PLAN_TARGET_NEXT_MESSAGE_TIME_INTERVAL_MS 20000
@@ -50,13 +53,13 @@ AnalogReader analogReader(
   /*maxValue=*/30,
   /*readInterval=*/3,
   /*numSamples=*/VOLUME_ANALOG_NUM_SAMPLES,
-  /*debounceInterval=*/3
+  /*debounceInterval=*/50 // Must be greater than 40 to work because the player.setVolume command takes a minimum of 40ms
 );
 
 void onAnalogValueChanged(int newValue) {
-  Serial.print("Analog value changed to: ");
-  Serial.println(newValue);
-  player.setVolume(newValue);
+  Serial.printf("🔊 [%s] Analog value changed to: %d\n", __PRETTY_FUNCTION__, newValue);
+  playerVolume = newValue;
+  player.setVolume(playerVolume);
   // Add your logic here to handle the new value
   // Here you can update your volume or perform any other action
 }
@@ -70,6 +73,7 @@ void setup() {
   Serial.println(__FILE__);
   Serial.println("Compiled " __DATE__ " of " __TIME__);
   Serial.println(F("--------------------------------------------------------------------------------------------"));
+  // Start the player before the analogReader.
   player.begin();
   // No need to set volume here, as it's already set by the callback
   // player.setVolume(volume);
@@ -85,9 +89,18 @@ void loop() {
 
   // Sound playing logic
   if (!player.isSoundPlaying()) {
-    Serial.printf("NOT PLAYING\n");
-    player.setVolume(volume);
+    Serial.printf("🔇 [%s] Not playing\n", __PRETTY_FUNCTION__);
+    Serial.printf("🔊 [%s] Setting volume to: %d\n", __PRETTY_FUNCTION__, playerVolume);
+    player.setVolume(playerVolume);
+    Serial.printf("▶️ [%s] Playing sound index: %d, duration: %d ms\n", __PRETTY_FUNCTION__, soundIndex, trackDurationMs);
     player.playSound(soundIndex, trackDurationMs);
+
+    // Increment soundIndex and reset if it exceeds MAX_SOUND_INDEX
+    soundIndex++;
+    if (soundIndex > MAX_SOUND_INDEX) {
+      soundIndex = 1;
+    }
+
     delay(20); // wait a bit so we are sure that the sound has started
   }
 }
