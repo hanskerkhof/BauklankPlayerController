@@ -113,7 +113,7 @@ protected:
 
     void decodeFolderAndTrack(uint16_t trackNumber, uint8_t& folder, uint8_t& track);
     static const uint8_t MIN_VOLUME = 0;
-    static const uint8_t MAX_VOLUME = 100;
+    static const uint8_t MAX_VOLUME = 30;
     static const int DEFAULT_FADE_INTERVAL_MS = 80;
     int fadeIntervalMs = DEFAULT_FADE_INTERVAL_MS;
 private:

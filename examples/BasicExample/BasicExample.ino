@@ -1,4 +1,5 @@
 #include <SoftwareSerial.h>
+#include "AnalogReader.h"
 
 #define MD_PLAYER_ENABLED
 // #define DY_PLAYER_ENABLED
@@ -41,6 +42,25 @@ uint32_t _plan_targetNextMessageTime;
 
 const uint32_t LOOP_TICK_INTERVAL_MS = 1000;
 
+int VOLUME_ANALOG_NUM_SAMPLES = 10;
+int initialVolume = 19;
+AnalogReader analogReader(
+  /*pin=*/A0,
+  /*minValue=*/0,
+  /*maxValue=*/30,
+  /*readInterval=*/3,
+  /*numSamples=*/VOLUME_ANALOG_NUM_SAMPLES,
+  /*debounceInterval=*/3
+);
+
+void onAnalogValueChanged(int newValue) {
+  Serial.print("Analog value changed to: ");
+  Serial.println(newValue);
+  player.setVolume(newValue);
+  // Add your logic here to handle the new value
+  // Here you can update your volume or perform any other action
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println();
@@ -51,12 +71,17 @@ void setup() {
   Serial.println("Compiled " __DATE__ " of " __TIME__);
   Serial.println(F("--------------------------------------------------------------------------------------------"));
   player.begin();
-  player.setVolume(volume);
+  // No need to set volume here, as it's already set by the callback
+  // player.setVolume(volume);
+  Serial.println(F("--------------------------------------------------------------------------------------------"));
+  analogReader.setCallback(onAnalogValueChanged);
+  analogReader.begin();
   Serial.println(F("--------------------------------------------------------------------------------------------"));
 }
 
 void loop() {
   player.update();
+  analogReader.update();
 
   // Sound playing logic
   if (!player.isSoundPlaying()) {

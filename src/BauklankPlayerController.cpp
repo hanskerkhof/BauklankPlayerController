@@ -2,11 +2,16 @@
 #include "BauklankPlayerController.h"
 #include <Arduino.h>
 
+//void PlayerController::setVolume(int _volume) {
+//    currentVolume = _volume;
+//    int _playerVolume = map(_volume, 0, 100, 0, 30);
+////    Serial.printf("%s - Setting volume to %d (mapped from %d)\n", __PRETTY_FUNCTION__, _playerVolume, _volume);
+//    setPlayerVolume(_playerVolume);
+//}
 void PlayerController::setVolume(int _volume) {
-    currentVolume = _volume;
-    int _playerVolume = map(_volume, 0, 100, 0, 30);
-//    Serial.printf("%s - Setting volume to %d (mapped from %d)\n", __PRETTY_FUNCTION__, _playerVolume, _volume);
-    setPlayerVolume(_playerVolume);
+    currentVolume = constrain(_volume, MIN_VOLUME, MAX_VOLUME);
+    // Serial.printf("%s - Setting volume to %d\n", __PRETTY_FUNCTION__, currentVolume);
+    setPlayerVolume(currentVolume);
 }
 
 int PlayerController::getVolume() {
@@ -204,8 +209,7 @@ void PlayerController::update() {
         Serial.printf("        │ Player type:    %s\n", getPlayerTypeName());
         Serial.printf("        │ Current time:   %lu ms\n", currentTime);
         Serial.printf("        │ Player status:  %s\n", playerStatusToString(playerStatus));
-        int playerVolume = map(currentVolume, 0, 100, 0, 30);
-        Serial.printf("        │ Current volume: %d (%d)\n", currentVolume, playerVolume);
+        Serial.printf("        │ Current volume: %d\n", currentVolume);
 
 //        if (playerStatus == STATUS_PLAYING) {
 //            if (playDuration > 0) {
