@@ -75,8 +75,12 @@ public:
     virtual void setVolume(int volume);
     int getVolume();
 
-    virtual void fadeIn(int durationMs, int targetVolume = 100);
+    virtual void fadeIn(int durationMs, int targetVolume = 30);
+    virtual void fadeIn(int durationMs, int targetVolume, int playTrack);
+    virtual void fadeIn(int durationMs, int targetVolume, int playTrack, uint32_t trackDurationMs);
+
     virtual void fadeOut(int durationMs, int targetVolume = 0);
+    virtual void fadeOut(int durationMs, int targetVolume, bool stopSound);
     virtual void fade(int durationMs, int minVolume, int maxVolume);
 
     virtual void playSound(int track);
@@ -116,6 +120,8 @@ protected:
     static const uint8_t MAX_VOLUME = 30;
     static const int DEFAULT_FADE_INTERVAL_MS = 80;
     int fadeIntervalMs = DEFAULT_FADE_INTERVAL_MS;
+    bool shouldStopAfterFade = false;
+
 private:
     unsigned long fadeStartTime;
 };

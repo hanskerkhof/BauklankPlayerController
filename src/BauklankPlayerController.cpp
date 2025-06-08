@@ -114,6 +114,41 @@ void PlayerController::fadeIn(int durationMs, int targetVolume) {
     }
 }
 
+void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack) {
+    Serial.printf("%s - Fade in with track requested: duration %d ms, target volume %d, track %d\n",
+                  __PRETTY_FUNCTION__, durationMs, targetVolume, playTrack);
+
+    // Set volume to 0 before starting playback
+    setVolume(0);
+    currentVolume = 0;
+
+    // Start playing the track
+    playSound(playTrack);
+
+    // Now call the regular fadeIn method
+    fadeIn(durationMs, targetVolume);
+}
+
+void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack, uint32_t trackDurationMs) {
+    Serial.printf("%s - Fade in with track and duration requested: fade duration %d ms, target volume %d, track %d, track duration %lu ms\n",
+                  __PRETTY_FUNCTION__, durationMs, targetVolume, playTrack, trackDurationMs);
+
+    // Set volume to 0 before starting playback
+    setVolume(0);
+    currentVolume = 0;
+
+    // Start playing the track with the specified duration
+    playSound(playTrack, trackDurationMs);
+
+    // Now call the regular fadeIn method
+    fadeIn(durationMs, targetVolume);
+}
+
+void PlayerController::fadeOut(int durationMs, int targetVolume, bool stopSound) {
+    fadeOut(durationMs, targetVolume);
+    shouldStopAfterFade = stopSound;
+}
+
 void PlayerController::fadeOut(int durationMs, int targetVolume) {
     Serial.printf("%s - Fade out requested: duration %d ms, target volume %d\n", __PRETTY_FUNCTION__, durationMs, targetVolume);
 
@@ -267,36 +302,39 @@ void PlayerController::update() {
         }
     }
 
-    // Handle fading
-    if (fadeDirection != FadeDirection::NONE && currentTime - lastFadeTime >= fadeIntervalMs) {
-        lastFadeTime = currentTime;
+  // Handle fading
+  if (fadeDirection != FadeDirection::NONE && currentTime - lastFadeTime >= fadeIntervalMs) {
+      lastFadeTime = currentTime;
 
-        int newVolume = currentVolume;
-        if (fadeDirection == FadeDirection::IN) {
-            newVolume = min(currentVolume + volumeStep, targetVolume);
-        } else if (fadeDirection == FadeDirection::OUT) {
-            newVolume = max(currentVolume - volumeStep, targetVolume);
-        }
+      int newVolume = currentVolume;
+      if (fadeDirection == FadeDirection::IN) {
+          newVolume = min(currentVolume + volumeStep, targetVolume);
+      } else if (fadeDirection == FadeDirection::OUT) {
+          newVolume = max(currentVolume - volumeStep, targetVolume);
+      }
 
-        newVolume = constrain(newVolume, MIN_VOLUME, MAX_VOLUME);
+      newVolume = constrain(newVolume, MIN_VOLUME, MAX_VOLUME);
 
-        if (newVolume != currentVolume) {
-//            Serial.printf("Updating volume: Old: %d, New: %d\n", currentVolume, newVolume);
-            setVolume(newVolume);
-            currentVolume = newVolume;
-        }
+      if (newVolume != currentVolume) {
+          setVolume(newVolume);
+          currentVolume = newVolume;
+      }
 
-        // Check if fade is complete
-        if (currentVolume == targetVolume) {
-            fadeDirection = FadeDirection::NONE;
-            unsigned long totalFadeTime = currentTime - fadeStartTime;
-            Serial.printf("                %s - Fade %s complete. Final volume: %d, Total fade time: %lu ms\n",
-                          __PRETTY_FUNCTION__,
-                          (fadeDirection == FadeDirection::IN) ? "in" : "out",
-                          currentVolume, totalFadeTime);
-        } else {
-//            Serial.printf("Fade progress: Current: %d, Target: %d, Elapsed: %lu ms\n",
-//                          currentVolume, targetVolume, currentTime - fadeStartTime);
-        }
-    }
+      // Check if fade is complete
+      if (currentVolume == targetVolume) {
+          fadeDirection = FadeDirection::NONE;
+          unsigned long totalFadeTime = currentTime - fadeStartTime;
+          Serial.printf("                %s - Fade %s complete. Final volume: %d, Total fade time: %lu ms\n",
+                        __PRETTY_FUNCTION__,
+                        (fadeDirection == FadeDirection::IN) ? "in" : "out",
+                        currentVolume, totalFadeTime);
+
+          // Check if we should stop the sound after fading
+          if (shouldStopAfterFade) {
+              stopSound();
+              shouldStopAfterFade = false;
+              Serial.printf("                %s - Sound stopped after fade completion\n", __PRETTY_FUNCTION__);
+          }
+      }
+  }
 }

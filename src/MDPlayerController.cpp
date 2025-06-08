@@ -59,8 +59,13 @@ void MDPlayerController::playSound(int track, uint32_t durationMs) {
 }
 
 void MDPlayerController::stopSound() {
+    Serial.printf("🛑 [%s] Stopping sound\n", __PRETTY_FUNCTION__);
+    Serial.printf("  Current player status: %s\n", playerStatusToString(playerStatus));
     mdPlayerCommand(CMD::STOP_PLAY, 0);
     playerStatus = STATUS_STOPPED;
+    Serial.printf("  Command sent: STOP_PLAY\n");
+    Serial.printf("  New player status: %s\n", playerStatusToString(playerStatus));
+//    Serial.println("  Sound stopped successfully");
 }
 
 void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, int16_t dat) {

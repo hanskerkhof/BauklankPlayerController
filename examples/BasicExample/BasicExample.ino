@@ -1,4 +1,3 @@
-#include <SoftwareSerial.h>
 #include "AnalogReader.h"
 
 #define MD_PLAYER_ENABLED
@@ -37,13 +36,6 @@ uint8_t playerVolume;
 const uint8_t minutes = 0;
 const uint8_t seconds = 3;
 static const uint32_t trackDurationMs = (minutes * 60 + seconds) * 1000;
-
-#define PLAN_TARGET_NEXT_MESSAGE_TIME_INTERVAL_MS 20000
-uint32_t _plan_startMillis;
-uint32_t _plan_currentMillis;
-uint32_t _plan_targetNextMessageTime;
-
-const uint32_t LOOP_TICK_INTERVAL_MS = 1000;
 
 int VOLUME_ANALOG_NUM_SAMPLES = 10;
 int initialVolume = 19;

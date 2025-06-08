@@ -25,6 +25,7 @@ enum PlayerStates {
   PLAY_TRACK,
   FADE_OUT,
   FADE_IN,
+  FADE_OUT2,
   STOP_TRACK,
   FADE_IN_START_TRACK,
   FADE_OUT_STOP_TRACK,
@@ -141,8 +142,7 @@ void loop() {
         // Do nothing in this state, just wait
         break;
 
-      case PLAY_SOUND:
-PLAY_TRACK:
+      case PLAY_TRACK:
         Serial.println("State: PLAY_TRACK");
         player.playSound(soundIndex, trackDurationMs);
         Serial.printf("Playing sound index: %d, duration: %d ms\n", soundIndex, trackDurationMs);
@@ -154,6 +154,16 @@ PLAY_TRACK:
         Serial.println("Stopped playing sound");
         break;
 
+//      case STOP_TRACK2:
+//        Serial.println("State: STOP_TRACK2");
+//        player.stopSound();
+//        Serial.println("Stopped playing sound (alternative method)");
+//        // You can add additional actions here, such as:
+//        // - Resetting some variables
+//        // - Logging additional information
+//        // - Triggering other events
+//        break;
+
       case FADE_IN:
         Serial.println("State: FADE_IN");
         player.fadeIn(FADE_DURATION, playerVolume);
@@ -162,6 +172,19 @@ PLAY_TRACK:
       case FADE_OUT:
         Serial.println("State: FADE_OUT");
         player.fadeOut(FADE_DURATION, 0);
+        break;
+
+      case FADE_OUT2:
+        Serial.println("State: FADE_OUT2");
+        // This could be an alternative fade out, for example:
+        // - Fading out to a non-zero volume
+        // - Using a different duration
+        // - Performing additional actions during or after the fade
+        player.fadeOut(FADE_DURATION / 2, playerVolume / 2);  // Faster fade to half volume
+        Serial.println("Fading out (alternative method)");
+        // You could add additional actions here, such as:
+        // - Scheduling a complete stop after the fade
+        // - Triggering other events
         break;
 
       case FADE_IN_START_TRACK:
