@@ -124,6 +124,7 @@ protected:
 
 private:
     unsigned long fadeStartTime;
+    int currentTrack;
 };
 
 #endif // PLAYER_CONTROLLER_H

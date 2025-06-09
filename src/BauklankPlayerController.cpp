@@ -32,6 +32,7 @@ void PlayerController::decodeFolderAndTrack(uint16_t trackNumber, uint8_t& folde
 
 void PlayerController::playSound(int track) {
     playerStatus = STATUS_PLAYING;
+    currentTrack = track;
     Serial.printf("%s - Playing track: %d, playerStatus: %s\n", __PRETTY_FUNCTION__, track, playerStatusToString(playerStatus));
 }
 
@@ -48,6 +49,7 @@ void PlayerController::playSound(int track, uint32_t durationMs) {
 
 void PlayerController::stopSound() {
     playerStatus = STATUS_STOPPED;
+    currentTrack = 0;
     Serial.printf("%s - Stopping sound, playerStatus: %d\n", __PRETTY_FUNCTION__, playerStatus);
 //    Serial.printf("%s - Last played track: %d, duration: %d ms, startTime: %lu, endTime: %lu\n",
 //                  __PRETTY_FUNCTION__, track, playDuration, playStartTime, playStartTime + playDuration);
@@ -242,9 +244,10 @@ void PlayerController::update() {
         Serial.println(F("\n          --- PlayerController Status Update ---"));
         Serial.println(F("        ┌─────────────────────────────────────────────────────"));
         Serial.printf("        │ Player type:    %s\n", getPlayerTypeName());
-        Serial.printf("        │ Current time:   %lu ms\n", currentTime);
-        Serial.printf("        │ Player status:  %s\n", playerStatusToString(playerStatus));
         Serial.printf("        │ Current volume: %d\n", currentVolume);
+//        Serial.printf("        │ Current time:   %lu ms\n", currentTime);
+        Serial.printf("        │ Current track:  %d\n", currentTrack);
+        Serial.printf("        │ Player status:  %s\n", playerStatusToString(playerStatus));
 
 //        if (playerStatus == STATUS_PLAYING) {
 //            if (playDuration > 0) {
@@ -275,8 +278,8 @@ void PlayerController::update() {
                 Serial.printf("        │ Progress: [%s] %lu/%lu s\n", progressBar, elapsedTime, totalDuration);
                 Serial.printf("        │ Remaining: %lu s\n", remainingTime);
 
-//                Serial.printf("        │ Playback progress: %lu s / %lu s\n", elapsedTime, totalDuration);
-//                Serial.printf("        │ Remaining time:    %lu s\n", remainingTime);
+                //                Serial.printf("        │ Playback progress: %lu s / %lu s\n", elapsedTime, totalDuration);
+                //                Serial.printf("        │ Remaining time:    %lu s\n", remainingTime);
             } else {
                 unsigned long elapsedTime = (currentTime - playStartTime) / 1000; // Convert to seconds
                 Serial.printf("        │ Playback time:     %lu s (No duration set)\n", elapsedTime);
