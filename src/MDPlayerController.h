@@ -12,8 +12,8 @@ public:
     MDPlayerController(int rxPin, int txPin);
     void begin() override;
     void playSound(int track) override;
-    void playSound(int track, uint32_t durationMs) override;
-    void playSound(int track, uint32_t durationMs, const char* trackName) override;
+    void playSound(int track, unsigned long durationMs) override;
+    void playSound(int track, unsigned long durationMs, const char* trackName) override;
     void stopSound() override;
     void enableLoop() override;
     void disableLoop() override;
@@ -59,7 +59,7 @@ private:
     int8_t lastSetPlayerVolume = -1;  // Initialize to an invalid value
     uint8_t currentVolume; // To keep track of the current volume
     bool isLooping = false;
-    void mdPlayerCommand(MDPlayerCommand command, int16_t dat);
+    void mdPlayerCommand(MDPlayerCommand command, uint16_t dat);
     void selectTFCard();
 
     // Define DEV_TF separately as it's not part of the command enum

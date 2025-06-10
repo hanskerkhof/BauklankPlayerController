@@ -1,7 +1,9 @@
+
 // #define MD_PLAYER_ENABLED
 #define DY_PLAYER_ENABLED
 // #define DF_PLAYER_ENABLED
 
+// Include the base class for the player controller
 #include <BauklankPlayerController.h>
 
 #ifdef MD_PLAYER_ENABLED
@@ -9,21 +11,27 @@
   // #define MD_PLAYER_TX_PIN D2
   #define MD_PLAYER_RX_PIN 0 // green
   #define MD_PLAYER_TX_PIN 2 // blue
+  // Include the specific class for the player controller
   #include <MDPlayerController.h>
+  // Instantiate the MDPlayerController with the RX and TX pins
   MDPlayerController player(MD_PLAYER_RX_PIN, MD_PLAYER_TX_PIN);
 #elif defined(DY_PLAYER_ENABLED)
   // #define DY_PLAYER_RX_PIN D1
   // #define DY_PLAYER_TX_PIN D2
   #define DY_PLAYER_RX_PIN 0 // green
   #define DY_PLAYER_TX_PIN 2 // blue
+  // Include the specific class for the player controller
   #include <DYPlayerController.h>
+  // Instantiate the DYPlayerController with the RX and TX pins
   DYPlayerController player(DY_PLAYER_RX_PIN, DY_PLAYER_TX_PIN);
 #elif defined(DF_PLAYER_ENABLED)
 // #define DF_PLAYER_RX_PIN D1
 // #define DF_PLAYER_TX_PIN D2
 #define DF_PLAYER_RX_PIN 0 // green
 #define DF_PLAYER_TX_PIN 2 // blue
+// Include the specific class for the player controller
 #include <DFRobotPlayerController.h>
+// Instantiate the DFRobotPlayerController with the RX and TX pins
 DFRobotPlayerController player(DF_PLAYER_RX_PIN, DF_PLAYER_TX_PIN);
 #endif
 

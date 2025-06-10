@@ -47,20 +47,17 @@ void MDPlayerController::playSound(int track) {
   uint8_t _folder, _track;
   decodeFolderAndTrack(trackNumber, _folder, _track);
   uint16_t parameter = (_folder << 8) | _track;
-//  Serial.printf("  %s - _folder: %u, _track: %u\n", __PRETTY_FUNCTION__, _folder, _track);
-//  Serial.printf("  %s - mdPlayerCommand(CMD_PLAY_FOLDER_FILE, 0x%X (Hex), %u (Dec))\n", __PRETTY_FUNCTION__, parameter, parameter);
   mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
-
 }
 
-void MDPlayerController::playSound(int track, uint32_t durationMs) {
+void MDPlayerController::playSound(int track, unsigned long durationMs) {
     // Call base class first for setting status and timing
     PlayerController::playSound(track, durationMs);
 
     playSound(track);
 }
 
-void MDPlayerController::playSound(int track, uint32_t durationMs, const char* trackName) {
+void MDPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
     // Call the base class implementation
     PlayerController::playSound(track, durationMs, trackName);
 
@@ -78,12 +75,12 @@ void MDPlayerController::stopSound() {
 //    Serial.println("  Sound stopped successfully");
 }
 
-void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, int16_t dat) {
+void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) {
     delay(20);
     int8_t frame[8] = { 0 };
     frame[0] = 0x7e;                // starting byte
     frame[1] = 0xff;                // version
-    frame[2] = 0x06;                // The number of bytes of the command without starting byte and ending byte
+    frame[2] = 0x06;                // The number of bytes of the command without starting uint8_t and ending byte
     frame[3] = static_cast<int8_t>(command);
 //    frame[3] = command;             //
     frame[4] = 0x00;                // 0x00 = no feedback, 0x01 = feedback

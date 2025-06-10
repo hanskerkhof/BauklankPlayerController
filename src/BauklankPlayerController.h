@@ -34,7 +34,7 @@ public:
 //#define DFPLAYER_EQ_BASS 5
 
 // DY player
-//typedef enum class Eq : uint8_t
+//typedef enum class Eq : byte
 //  {
 //    Normal,
 //    Pop,
@@ -77,21 +77,22 @@ public:
 
     virtual void fadeIn(int durationMs, int targetVolume = 30);
     virtual void fadeIn(int durationMs, int targetVolume, int playTrack);
-    virtual void fadeIn(int durationMs, int targetVolume, int playTrack, uint32_t trackDurationMs);
+    virtual void fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs);
 
     virtual void fadeOut(int durationMs, int targetVolume = 0);
     virtual void fadeOut(int durationMs, int targetVolume, bool stopSound);
     virtual void fade(int durationMs, int minVolume, int maxVolume);
 
     virtual void playSound(int track);
-    virtual void playSound(int track, uint32_t durationMs);
-    virtual void playSound(int track, uint32_t durationMs, const char* trackName);
+    virtual void playSound(int track, unsigned long durationMs);
+    virtual void playSound(int track, unsigned long durationMs, const char* trackName);
 
     virtual void enableLoop() = 0;
     virtual void disableLoop() = 0;
 
     virtual void setEqualizerPreset(EqualizerPreset preset) = 0;
 
+    void displayPlayerStatusBox();
     void playSoundRandom(int minTrack, int maxTrack);
     void update();
     bool isSoundPlaying() const { return playerStatus == STATUS_PLAYING; }
@@ -105,8 +106,8 @@ protected:
 
     PlayerStatus playerStatus;
 //    PlayerStatus playerStatus = STATUS_STOPPED;  // Add this line
-    uint32_t playStartTime = 0;
-    uint32_t playDuration = 0;
+    unsigned long playStartTime = 0;
+    unsigned long playDuration = 0;
 
     FadeDirection fadeDirection = FadeDirection::NONE;
     unsigned long lastFadeTime = 0;

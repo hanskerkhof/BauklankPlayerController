@@ -3,6 +3,7 @@
 #include <Arduino.h>
 
 unsigned long lastPeriodicUpdate = 0;
+unsigned long DISPLAY_STATUS_UPDATE_INTERVAL = 4700;
 
 void PlayerController::setVolume(int _volume) {
     currentVolume = constrain(_volume, MIN_VOLUME, MAX_VOLUME);
@@ -32,7 +33,7 @@ void PlayerController::playSound(int track) {
     Serial.printf("%s - Playing track: %d, playerStatus: %s\n", __PRETTY_FUNCTION__, track, playerStatusToString(playerStatus));
 }
 
-void PlayerController::playSound(int track, uint32_t durationMs) {
+void PlayerController::playSound(int track, unsigned long durationMs) {
 
     // Add duration
     playStartTime = millis();
@@ -41,12 +42,11 @@ void PlayerController::playSound(int track, uint32_t durationMs) {
     Serial.printf("%s - Playing track: %d, duration: %d ms, startTime: %lu, endTime: %lu\n",
                   __PRETTY_FUNCTION__, track, durationMs, playStartTime, playStartTime + playDuration);
 
-    // Force statistics to print in update() loop
-    lastPeriodicUpdate = millis() + 10000000;
     playSound(track);
+    PlayerController::displayPlayerStatusBox();
 }
 
-void PlayerController::playSound(int track, uint32_t durationMs, const char* trackName) {
+void PlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
     // Add duration
     playStartTime = millis();
     playDuration = durationMs;
@@ -60,11 +60,11 @@ void PlayerController::playSound(int track, uint32_t durationMs, const char* tra
     playSound(track);
 }
 
-
 void PlayerController::stopSound() {
+    // TODO create a method to reset the track when it is stopped
     playerStatus = STATUS_STOPPED;
     currentTrack = 0;
-    currentTrackName = nullptr;
+    currentTrackName = "";
     Serial.printf("%s - Stop sound, playerStatus: %d\n", __PRETTY_FUNCTION__, playerStatus);
 //    Serial.printf("%s - Last played track: %d, duration: %d ms, startTime: %lu, endTime: %lu\n",
 //                  __PRETTY_FUNCTION__, track, playDuration, playStartTime, playStartTime + playDuration);
@@ -146,7 +146,7 @@ void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack) {
     fadeIn(durationMs, targetVolume);
 }
 
-void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack, uint32_t trackDurationMs) {
+void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs) {
     Serial.printf("%s - Fade in with track and duration requested: fade duration %d ms, target volume %d, track %d, track duration %lu ms\n",
                   __PRETTY_FUNCTION__, durationMs, targetVolume, playTrack, trackDurationMs);
 
@@ -246,83 +246,222 @@ void PlayerController::fade(int durationMs, int minVolume, int maxVolume) {
     }
 }
 
+//void PlayerController::displayPlayerStatusBox() {
+////    Serial.println(F("    ╒════════════════════════════════════════════════════╕"));
+//    Serial.println(F("    ┌─────────────────────────────────────────────────────┐"));
+//    Serial.println(F("    |       --- PlayerController Status Update ---        |"));
+//    Serial.println(F("    +─────────────────────────────────────────────────────+"));
+//
+//    Serial.printf("    │ Player type:    %-36s|\n", getPlayerTypeName());
+//    Serial.printf("    │ Current volume: %-36d|\n", currentVolume);
+//
+//    char trackInfo[50];
+//    snprintf(trackInfo, sizeof(trackInfo), "%d%s%s%s",
+//             currentTrack,
+//             (currentTrackName && currentTrackName[0] != '\0') ? " (" : "",
+//             (currentTrackName && currentTrackName[0] != '\0') ? currentTrackName : "",
+//             (currentTrackName && currentTrackName[0] != '\0') ? ")" : "");
+//    Serial.printf("    │ Current track:  %-36s|\n", trackInfo);
+//
+//    Serial.printf("    │ Player status:  %-36s|\n", playerStatusToString(playerStatus));
+//
+//
+//    if (playerStatus == STATUS_PLAYING) {
+//        if (playDuration > 0) {
+//            char durationStr[40], progressStr[40], remainingStr[40];
+//
+//            snprintf(durationStr, sizeof(durationStr), "%lu ms (playing)", playDuration);
+//            Serial.printf("    │ Play duration:  %-36s|\n", durationStr);
+//
+//            unsigned long long currentTime = millis();
+//            unsigned long long elapsedTime = (currentTime - playStartTime) / 1000; // Convert to seconds
+//            unsigned long long totalDuration = playDuration / 1000; // Convert to seconds
+//            unsigned long long remainingTime = (elapsedTime < totalDuration) ? (totalDuration - elapsedTime) : 0;
+//
+//            // Create progress bar
+//            const int barWidth = 26;
+//            int progress = 0;
+//            if (totalDuration > 0) { // Avoid division by zero
+//                progress = (int)(((double)elapsedTime / totalDuration) * barWidth);
+//            }
+//            progress = constrain(progress, 0, barWidth); // Ensure progress is within bounds
+//
+//            char progressBar[barWidth + 1];
+//            for (int i = 0; i < barWidth; i++) {
+//                progressBar[i] = (i < progress) ? '=' : '-';
+//            }
+//            progressBar[barWidth] = '\0';
+//
+//            snprintf(progressStr, sizeof(progressStr), "[%s] %llu/%llu s", progressBar, elapsedTime, totalDuration);
+//            snprintf(remainingStr, sizeof(remainingStr), "%llu s", remainingTime);
+//
+//            Serial.printf("    │ Progress:       %-36s|\n", progressStr);
+//            Serial.printf("    │ Remaining:      %-36s|\n", remainingStr);
+//        } else {
+//            unsigned long elapsedTime = (millis() - playStartTime) / 1000; // Convert to seconds
+//            char playbackStr[40];
+//            snprintf(playbackStr, sizeof(playbackStr), "%lu s (No duration set)", elapsedTime);
+//            Serial.printf("    │ Playback time:  %-36s|\n", playbackStr);
+//        }
+//    }
+//
+//    if (fadeDirection != FadeDirection::NONE) {
+//        Serial.printf("    │ Fade in progress: %-32s|\n", (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
+//        Serial.printf("    │ Current volume: %d, Target volume: %-17d|\n", currentVolume, targetVolume);
+//    }
+//
+//    Serial.println(F("    └─────────────────────────────────────────────────────┘"));
+//}
+
+void PlayerController::displayPlayerStatusBox() {
+    Serial.println(F("    ┌───────────────────────────────────────────────────────┐"));
+    Serial.println(F("    |        --- PlayerController Status Update ---         |"));
+    Serial.println(F("    +───────────────────────────────────────────────────────+"));
+
+    Serial.printf("    │ Player type:    %-38s|\n", getPlayerTypeName());
+    Serial.printf("    │ Current volume: %-38d|\n", currentVolume);
+
+    char trackInfo[50];
+    snprintf(trackInfo, sizeof(trackInfo), "%d%s%s%s",
+             currentTrack,
+             (currentTrackName && currentTrackName[0] != '\0') ? " (" : "",
+             (currentTrackName && currentTrackName[0] != '\0') ? currentTrackName : "",
+             (currentTrackName && currentTrackName[0] != '\0') ? ")" : "");
+    Serial.printf("    │ Current track:  %-38s|\n", trackInfo);
+
+    Serial.printf("    │ Player status:  %-38s|\n", playerStatusToString(playerStatus));
+
+    if (playerStatus == STATUS_PLAYING) {
+        if (playDuration > 0) {
+            char durationStr[40], progressStr[40], remainingStr[40];
+
+            snprintf(durationStr, sizeof(durationStr), "%lu ms (playing)", playDuration);
+            Serial.printf("    │ Play duration:  %-38s|\n", durationStr);
+
+            unsigned long long currentTime = millis();
+            unsigned long long elapsedTime = (currentTime - playStartTime) / 1000; // Convert to seconds
+            unsigned long long totalDuration = playDuration / 1000; // Convert to seconds
+            unsigned long long remainingTime = (elapsedTime < totalDuration) ? (totalDuration - elapsedTime) : 0;
+
+            // Create progress bar
+            const int barWidth = 26;
+            int progress = 0;
+            if (totalDuration > 0) { // Avoid division by zero
+                progress = (int)(((double)elapsedTime / totalDuration) * barWidth);
+            }
+            progress = constrain(progress, 0, barWidth); // Ensure progress is within bounds
+
+            char progressBar[barWidth + 1];
+            for (int i = 0; i < barWidth; i++) {
+                progressBar[i] = (i < progress) ? '=' : '-';
+            }
+            progressBar[barWidth] = '\0';
+
+            snprintf(progressStr, sizeof(progressStr), "[%s] %llu/%llu s", progressBar, elapsedTime, totalDuration);
+            snprintf(remainingStr, sizeof(remainingStr), "%llu s", remainingTime);
+
+            Serial.printf("    │ Progress:       %-38s|\n", progressStr);
+            Serial.printf("    │ Remaining:      %-38s|\n", remainingStr);
+        } else {
+            unsigned long elapsedTime = (millis() - playStartTime) / 1000; // Convert to seconds
+            char playbackStr[40];
+            snprintf(playbackStr, sizeof(playbackStr), "%lu s (No duration set)", elapsedTime);
+            Serial.printf("    │ Playback time:  %-38s|\n", playbackStr);
+        }
+    }
+
+    if (fadeDirection != FadeDirection::NONE) {
+        Serial.printf("    │ Fade in progress: %-34s|\n", (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
+        Serial.printf("    │ Current volume: %d, Target volume: %-19d|\n", currentVolume, targetVolume);
+    }
+
+    Serial.println(F("    └───────────────────────────────────────────────────────┘"));
+}
+
 void PlayerController::update() {
     unsigned long currentTime = millis();
 
     // TODO do a periodic update every 5 seconds and print statistics like sound playing status, current time, etc.
     // Periodic update every 5 seconds
-    if (currentTime - lastPeriodicUpdate >= 5000) {
+    if (currentTime - lastPeriodicUpdate >= DISPLAY_STATUS_UPDATE_INTERVAL) {
         lastPeriodicUpdate = currentTime;
 
-        // Print statistics
-        Serial.println(F("\n          --- PlayerController Status Update ---"));
-        Serial.println(F("        ┌─────────────────────────────────────────────────────"));
-        Serial.printf("        │ Player type:    %s\n", getPlayerTypeName());
-        Serial.printf("        │ Current volume: %d\n", currentVolume);
-//        Serial.printf("        │ Current time:   %lu ms\n", currentTime);
-        Serial.printf("        │ Current track:  %d", currentTrack);
-        if (currentTrackName && currentTrackName[0] != '\0') {
-            Serial.printf(" (%s)", currentTrackName);
-        }
-        Serial.printf("\n");
+        PlayerController::displayPlayerStatusBox();
 
-        Serial.printf("        │ Player status:  %s\n", playerStatusToString(playerStatus));
-
-
-
-if (playerStatus == STATUS_PLAYING) {
-//    Serial.printf("playDuration: %lu ms (playing)\n", playDuration);
-    if (playDuration > 0) {
-        Serial.printf("        │ Play duration:  %lu ms (playing)\n", playDuration);
-
-
-        unsigned long long elapsedTime = (unsigned long long)(currentTime - playStartTime) / 1000; // Convert to seconds
-        unsigned long long totalDuration = (unsigned long long)playDuration / 1000; // Convert to seconds
-        unsigned long long remainingTime = (elapsedTime < totalDuration) ? (totalDuration - elapsedTime) : 0;
-
-        // Create progress bar
-        const int barWidth = 26;
-        int progress = 0;
-        if (totalDuration > 0) { // Avoid division by zero
-            progress = (int)(((double)elapsedTime / totalDuration) * barWidth);
-        }
-        progress = constrain(progress, 0, barWidth); // Ensure progress is within bounds
-
-        char progressBar[barWidth + 1];
-        for (int i = 0; i < barWidth; i++) {
-            progressBar[i] = (i < progress) ? '=' : '-';
-        }
-        progressBar[barWidth] = '\0';
-
-        Serial.printf("        │ Progress: [%s] %llu/%llu s\n", progressBar, elapsedTime, totalDuration);
-        Serial.printf("        │ Remaining: %llu s\n", remainingTime);
-    } else {
-        unsigned long elapsedTime = (currentTime - playStartTime) / 1000; // Convert to seconds
-        Serial.printf("        │ Playback time:     %lu s (No duration set)\n", elapsedTime);
-    }
-}
-
-        if (fadeDirection != FadeDirection::NONE) {
-            Serial.printf("        │ Fade in progress: Direction: %s\n", (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
-            Serial.printf("        │ Current volume: %d, Target volume: %d\n", currentVolume, targetVolume);
-        }
-
-        Serial.println(F("        └─────────────────────────────────────────────────────"));
+//        // Print statistics
+//        Serial.println(F("    ┌────────────────────────────────────────────────────┐"));
+//        Serial.println(F("    |       --- PlayerController Status Update ---       |"));
+//        Serial.println(F("    └────────────────────────────────────────────────────┘"));
+//           Serial.printf("    │ Player type:    %s\n", getPlayerTypeName());
+//           Serial.printf("    │ Current volume: %d\n", currentVolume);
+////         Serial.printf("    │ Current time:   %lu ms\n", currentTime);
+//           Serial.printf("    │ Current track:  %d", currentTrack);
+//          if (currentTrackName && currentTrackName[0] != '\0') {
+//              Serial.printf(" (%s)", currentTrackName);
+//          }
+//        Serial.printf("\n");
+//
+//           Serial.printf("    │ Player status:  %s\n", playerStatusToString(playerStatus));
+//
+//
+//
+//if (playerStatus == STATUS_PLAYING) {
+////    Serial.printf("playDuration: %lu ms (playing)\n", playDuration);
+//    if (playDuration > 0) {
+//          Serial.printf("    │ Play duration:  %lu ms (playing)\n", playDuration);
+//
+//        unsigned long long elapsedTime = (unsigned long long)(currentTime - playStartTime) / 1000; // Convert to seconds
+//        unsigned long long totalDuration = (unsigned long long)playDuration / 1000; // Convert to seconds
+//        unsigned long long remainingTime = (elapsedTime < totalDuration) ? (totalDuration - elapsedTime) : 0;
+//
+//        // Create progress bar
+//        const int barWidth = 26;
+//        int progress = 0;
+//        if (totalDuration > 0) { // Avoid division by zero
+//            progress = (int)(((double)elapsedTime / totalDuration) * barWidth);
+//        }
+//        progress = constrain(progress, 0, barWidth); // Ensure progress is within bounds
+//
+//        char progressBar[barWidth + 1];
+//        for (int i = 0; i < barWidth; i++) {
+//            progressBar[i] = (i < progress) ? '=' : '-';
+//        }
+//        progressBar[barWidth] = '\0';
+//
+//        Serial.printf("    │ Progress: [%s] %llu/%llu s\n", progressBar, elapsedTime, totalDuration);
+//        Serial.printf("    │ Remaining: %llu s\n", remainingTime);
+//    } else {
+//        unsigned long elapsedTime = (currentTime - playStartTime) / 1000; // Convert to seconds
+//        Serial.printf("    │ Playback time:     %lu s (No duration set)\n", elapsedTime);
+//    }
+//}
+//
+//        if (fadeDirection != FadeDirection::NONE) {
+//            Serial.printf("    │ Fade in progress: Direction: %s\n", (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
+//            Serial.printf("    │ Current volume: %d, Target volume: %d\n", currentVolume, targetVolume);
+//        }
+//
+//        Serial.println(F("    └─────────────────────────────────────────────────────"));
     }
 
     // Check if sound is playing and duration is set
     if (playerStatus == STATUS_PLAYING && playDuration > 0) {
         unsigned long elapsedTime = currentTime - playStartTime;
+
+
         if (elapsedTime >= playDuration) {
+
+            PlayerController::displayPlayerStatusBox(); // Update status box
+
             playerStatus = STATUS_STOPPED;
             // TODO create a method for resetting the track when it finishes playing
             currentTrack = 0;
-            currentTrackName = nullptr;
+            currentTrackName = "";
             Serial.printf("%s - Sound finished playing. Duration: %lu ms, New playerStatus: %s\n",
                   __PRETTY_FUNCTION__, playDuration, playerStatusToString(playerStatus));
             playDuration = 0; // Reset playDuration
-            // Force statistics to print in update() loop
-            lastPeriodicUpdate = millis() + 10000000;
+
+            PlayerController::displayPlayerStatusBox(); // Update status box
         }
     }
 

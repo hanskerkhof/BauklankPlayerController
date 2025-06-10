@@ -40,14 +40,14 @@ void DYPlayerController::playSound(int track) {
 
 }
 
-void DYPlayerController::playSound(int track, uint32_t durationMs) {
+void DYPlayerController::playSound(int track, unsigned long durationMs) {
     // Call base class first for setting status and timing
     PlayerController::playSound(track, durationMs);
 
     playSound(track);
 }
 
-void DYPlayerController::playSound(int track, uint32_t durationMs, const char* trackName) {
+void DYPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
     // Call the base class implementation
     PlayerController::playSound(track, durationMs, trackName);
 
