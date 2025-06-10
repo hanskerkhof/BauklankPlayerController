@@ -13,6 +13,7 @@ public:
     void begin() override;
     void playSound(int track) override;
     void playSound(int track, uint32_t durationMs) override;
+    void playSound(int track, uint32_t durationMs, const char* trackName) override;
     void stopSound() override;
     void enableLoop() override;
     void disableLoop() override;

@@ -1,0 +1,99 @@
+// #define MD_PLAYER_ENABLED
+#define DY_PLAYER_ENABLED
+// #define DF_PLAYER_ENABLED
+
+#include <BauklankPlayerController.h>
+
+#ifdef MD_PLAYER_ENABLED
+  // #define MD_PLAYER_RX_PIN D1
+  // #define MD_PLAYER_TX_PIN D2
+  #define MD_PLAYER_RX_PIN 0 // green
+  #define MD_PLAYER_TX_PIN 2 // blue
+  #include <MDPlayerController.h>
+  MDPlayerController player(MD_PLAYER_RX_PIN, MD_PLAYER_TX_PIN);
+#elif defined(DY_PLAYER_ENABLED)
+  // #define DY_PLAYER_RX_PIN D1
+  // #define DY_PLAYER_TX_PIN D2
+  #define DY_PLAYER_RX_PIN 0 // green
+  #define DY_PLAYER_TX_PIN 2 // blue
+  #include <DYPlayerController.h>
+  DYPlayerController player(DY_PLAYER_RX_PIN, DY_PLAYER_TX_PIN);
+#elif defined(DF_PLAYER_ENABLED)
+// #define DF_PLAYER_RX_PIN D1
+// #define DF_PLAYER_TX_PIN D2
+#define DF_PLAYER_RX_PIN 0 // green
+#define DF_PLAYER_TX_PIN 2 // blue
+#include <DFRobotPlayerController.h>
+DFRobotPlayerController player(DF_PLAYER_RX_PIN, DF_PLAYER_TX_PIN);
+#endif
+
+int soundIndex = 1;
+const int MIN_SOUND_INDEX  = 1;
+const int MAX_SOUND_INDEX = 10;
+uint8_t playerVolume = 30;
+// Define minutes and seconds for the duration of the track
+const uint8_t minutes = 0;
+const uint8_t seconds = 20;
+static const uint32_t trackDurationMs = ((minutes * 60) + seconds) * 1000;
+char trackName[20];  // Adjust the size as needed
+
+#define PLAN_TARGET_NEXT_MESSAGE_TIME_INTERVAL_MS 8000
+uint32_t _plan_tickCount;
+uint32_t _plan_startMillis;
+uint32_t _plan_currentMillis;
+uint32_t _plan_targetNextMessageTime;
+const uint32_t LOOP_TICK_INTERVAL_MS = 1000;
+
+void updateTrackName() {
+  snprintf(trackName, sizeof(trackName), "%d_TEST_NAME", soundIndex);
+}
+
+void incrementSoundIndex() {
+  soundIndex++;
+  if (soundIndex > MAX_SOUND_INDEX) {
+    soundIndex = MIN_SOUND_INDEX;
+  }
+  updateTrackName();
+}
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println();
+  Serial.println();
+  Serial.println();
+  Serial.println(F("--------------------------------------------------------------------------------------------"));
+  Serial.println(__FILE__);
+  Serial.println("Compiled " __DATE__ " of " __TIME__);
+  Serial.println(F("--------------------------------------------------------------------------------------------"));
+  Serial.println(F("Start the player..."));
+  Serial.println(F("--------------------------------------------------------------------------------------------"));
+  updateTrackName();  // Initialize trackName
+  // Start the player
+  player.begin();
+  player.setVolume(30);
+  delay(1000); // add a delay for clarity to see what is happening
+  Serial.println(F("--------------------------------------------------------------------------------------------"));
+}
+
+void loop() {
+  _plan_currentMillis = millis();
+
+  player.update();
+
+  // Sound playing logic
+  if (!player.isSoundPlaying()) {
+
+    Serial.printf("🔇 [%s] Not playing\n", __PRETTY_FUNCTION__);
+    Serial.printf("▶️ [%s] Play sound index: %d, duration: %d ms\n", __PRETTY_FUNCTION__, soundIndex, trackDurationMs);
+    player.playSound(soundIndex, trackDurationMs, trackName);
+
+//    incrementSoundIndex();
+      delay(20);  // wait a bit so we are sure that the sound has started
+  }
+
+//  if (_plan_currentMillis > _plan_targetNextMessageTime) {
+//    _plan_tickCount++;
+//    _plan_targetNextMessageTime = _plan_currentMillis + PLAN_TARGET_NEXT_MESSAGE_TIME_INTERVAL_MS;
+//    Serial.printf("plan_update() :: _plan_currentMillis: %d, _plan_targetNextMessageTime: %d, _plan_tickCount: %d\n", _plan_currentMillis, _plan_targetNextMessageTime, _plan_tickCount);
+//  }  // Interval
+}  // Loop

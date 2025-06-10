@@ -47,6 +47,14 @@ void DYPlayerController::playSound(int track, uint32_t durationMs) {
     playSound(track);
 }
 
+void DYPlayerController::playSound(int track, uint32_t durationMs, const char* trackName) {
+    // Call the base class implementation
+    PlayerController::playSound(track, durationMs, trackName);
+
+    // Then call playsound with the 2 parameters
+    playSound(track, durationMs);
+}
+
 void DYPlayerController::stopSound() {
     myDYPlayer.stop();
     playerStatus = STATUS_STOPPED;

@@ -46,9 +46,25 @@ void PlayerController::playSound(int track, uint32_t durationMs) {
     playSound(track);
 }
 
+void PlayerController::playSound(int track, uint32_t durationMs, const char* trackName) {
+    // Add duration
+    playStartTime = millis();
+    playDuration = durationMs;
+    currentTrackName = trackName;
+
+    Serial.printf("%s - Playing track: %d (%s), duration: %d ms, startTime: %lu, endTime: %lu\n",
+                  __PRETTY_FUNCTION__, track, currentTrackName, durationMs, playStartTime, playStartTime + playDuration);
+
+    // Force statistics to print in update() loop
+    lastPeriodicUpdate = millis() + 10000000;
+    playSound(track);
+}
+
+
 void PlayerController::stopSound() {
     playerStatus = STATUS_STOPPED;
     currentTrack = 0;
+    currentTrackName = nullptr;
     Serial.printf("%s - Stop sound, playerStatus: %d\n", __PRETTY_FUNCTION__, playerStatus);
 //    Serial.printf("%s - Last played track: %d, duration: %d ms, startTime: %lu, endTime: %lu\n",
 //                  __PRETTY_FUNCTION__, track, playDuration, playStartTime, playStartTime + playDuration);
@@ -244,7 +260,12 @@ void PlayerController::update() {
         Serial.printf("        │ Player type:    %s\n", getPlayerTypeName());
         Serial.printf("        │ Current volume: %d\n", currentVolume);
 //        Serial.printf("        │ Current time:   %lu ms\n", currentTime);
-        Serial.printf("        │ Current track:  %d\n", currentTrack);
+        Serial.printf("        │ Current track:  %d", currentTrack);
+        if (currentTrackName && currentTrackName[0] != '\0') {
+            Serial.printf(" (%s)", currentTrackName);
+        }
+        Serial.printf("\n");
+
         Serial.printf("        │ Player status:  %s\n", playerStatusToString(playerStatus));
 
 
@@ -294,10 +315,14 @@ if (playerStatus == STATUS_PLAYING) {
         unsigned long elapsedTime = currentTime - playStartTime;
         if (elapsedTime >= playDuration) {
             playerStatus = STATUS_STOPPED;
+            // TODO create a method for resetting the track when it finishes playing
             currentTrack = 0;
+            currentTrackName = nullptr;
             Serial.printf("%s - Sound finished playing. Duration: %lu ms, New playerStatus: %s\n",
                   __PRETTY_FUNCTION__, playDuration, playerStatusToString(playerStatus));
             playDuration = 0; // Reset playDuration
+            // Force statistics to print in update() loop
+            lastPeriodicUpdate = millis() + 10000000;
         }
     }
 

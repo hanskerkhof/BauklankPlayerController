@@ -85,6 +85,7 @@ public:
 
     virtual void playSound(int track);
     virtual void playSound(int track, uint32_t durationMs);
+    virtual void playSound(int track, uint32_t durationMs, const char* trackName);
 
     virtual void enableLoop() = 0;
     virtual void disableLoop() = 0;
@@ -125,6 +126,7 @@ protected:
 private:
     unsigned long fadeStartTime;
     int currentTrack;
+    const char* currentTrackName;
 };
 
 #endif // PLAYER_CONTROLLER_H
