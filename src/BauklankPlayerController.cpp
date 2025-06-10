@@ -49,7 +49,7 @@ void PlayerController::playSound(int track, uint32_t durationMs) {
 void PlayerController::stopSound() {
     playerStatus = STATUS_STOPPED;
     currentTrack = 0;
-    Serial.printf("%s - Stopping sound, playerStatus: %d\n", __PRETTY_FUNCTION__, playerStatus);
+    Serial.printf("%s - Stop sound, playerStatus: %d\n", __PRETTY_FUNCTION__, playerStatus);
 //    Serial.printf("%s - Last played track: %d, duration: %d ms, startTime: %lu, endTime: %lu\n",
 //                  __PRETTY_FUNCTION__, track, playDuration, playStartTime, playStartTime + playDuration);
 }
@@ -250,9 +250,9 @@ void PlayerController::update() {
 
 
 if (playerStatus == STATUS_PLAYING) {
-    Serial.printf("playDuration: %lu ms (playing)\n", playDuration);
+//    Serial.printf("playDuration: %lu ms (playing)\n", playDuration);
     if (playDuration > 0) {
-        Serial.printf("        │ Play duration:  %lu ms\n", playDuration);
+        Serial.printf("        │ Play duration:  %lu ms (playing)\n", playDuration);
 
 
         unsigned long long elapsedTime = (unsigned long long)(currentTime - playStartTime) / 1000; // Convert to seconds

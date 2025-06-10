@@ -47,8 +47,8 @@ void MDPlayerController::playSound(int track) {
   uint8_t _folder, _track;
   decodeFolderAndTrack(trackNumber, _folder, _track);
   uint16_t parameter = (_folder << 8) | _track;
-  Serial.printf("  %s - _folder: %u, _track: %u\n", __PRETTY_FUNCTION__, _folder, _track);
-  Serial.printf("  %s - mdPlayerCommand(CMD_PLAY_FOLDER_FILE, 0x%X (Hex), %u (Dec))\n", __PRETTY_FUNCTION__, parameter, parameter);
+//  Serial.printf("  %s - _folder: %u, _track: %u\n", __PRETTY_FUNCTION__, _folder, _track);
+//  Serial.printf("  %s - mdPlayerCommand(CMD_PLAY_FOLDER_FILE, 0x%X (Hex), %u (Dec))\n", __PRETTY_FUNCTION__, parameter, parameter);
   mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
 
 }
@@ -61,11 +61,11 @@ void MDPlayerController::playSound(int track, uint32_t durationMs) {
 }
 
 void MDPlayerController::stopSound() {
-    Serial.printf("🛑 [%s] Stopping sound\n", __PRETTY_FUNCTION__);
-    Serial.printf("  Current player status: %s\n", playerStatusToString(playerStatus));
+//    Serial.printf("🛑 [%s] Stopping sound\n", __PRETTY_FUNCTION__);
+//    Serial.printf("  Current player status: %s\n", playerStatusToString(playerStatus));
     mdPlayerCommand(CMD::STOP_PLAY, 0);
     playerStatus = STATUS_STOPPED;
-    Serial.printf("  Command sent: STOP_PLAY\n");
+//    Serial.printf("  Command sent: STOP_PLAY\n");
     Serial.printf("  New player status: %s\n", playerStatusToString(playerStatus));
 //    Serial.println("  Sound stopped successfully");
 }
