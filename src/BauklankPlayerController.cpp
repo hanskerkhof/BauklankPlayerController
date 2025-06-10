@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 unsigned long lastPeriodicUpdate = 0;
-unsigned long DISPLAY_STATUS_UPDATE_INTERVAL = 4700;
+unsigned long DISPLAY_STATUS_UPDATE_INTERVAL = 5000;
 
 void PlayerController::setVolume(int _volume) {
     currentVolume = constrain(_volume, MIN_VOLUME, MAX_VOLUME);
