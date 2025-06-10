@@ -2,12 +2,8 @@
 #include "BauklankPlayerController.h"
 #include <Arduino.h>
 
-//void PlayerController::setVolume(int _volume) {
-//    currentVolume = _volume;
-//    int _playerVolume = map(_volume, 0, 100, 0, 30);
-////    Serial.printf("%s - Setting volume to %d (mapped from %d)\n", __PRETTY_FUNCTION__, _playerVolume, _volume);
-//    setPlayerVolume(_playerVolume);
-//}
+unsigned long lastPeriodicUpdate = 0;
+
 void PlayerController::setVolume(int _volume) {
     currentVolume = constrain(_volume, MIN_VOLUME, MAX_VOLUME);
     // Serial.printf("%s - Setting volume to %d\n", __PRETTY_FUNCTION__, currentVolume);
@@ -37,7 +33,6 @@ void PlayerController::playSound(int track) {
 }
 
 void PlayerController::playSound(int track, uint32_t durationMs) {
-    playSound(track);
 
     // Add duration
     playStartTime = millis();
@@ -45,6 +40,10 @@ void PlayerController::playSound(int track, uint32_t durationMs) {
 
     Serial.printf("%s - Playing track: %d, duration: %d ms, startTime: %lu, endTime: %lu\n",
                   __PRETTY_FUNCTION__, track, durationMs, playStartTime, playStartTime + playDuration);
+
+    // Force statistics to print in update() loop
+    lastPeriodicUpdate = millis() + 10000000;
+    playSound(track);
 }
 
 void PlayerController::stopSound() {
@@ -236,7 +235,6 @@ void PlayerController::update() {
 
     // TODO do a periodic update every 5 seconds and print statistics like sound playing status, current time, etc.
     // Periodic update every 5 seconds
-    static unsigned long lastPeriodicUpdate = 0;
     if (currentTime - lastPeriodicUpdate >= 5000) {
         lastPeriodicUpdate = currentTime;
 
@@ -249,42 +247,39 @@ void PlayerController::update() {
         Serial.printf("        │ Current track:  %d\n", currentTrack);
         Serial.printf("        │ Player status:  %s\n", playerStatusToString(playerStatus));
 
-//        if (playerStatus == STATUS_PLAYING) {
-//            if (playDuration > 0) {
-//                unsigned long elapsedTime = currentTime - playStartTime;
-//                unsigned long remainingTime = (elapsedTime < playDuration) ? (playDuration - elapsedTime) : 0;
-//                Serial.printf("        │ Playback progress: %lu ms / %lu ms\n", elapsedTime, playDuration);
-//                Serial.printf("        │ Remaining time: %lu ms\n", remainingTime);
-//            } else {
-//                Serial.printf("        │ Playback time: %lu ms (No duration set)\n", currentTime - playStartTime);
-//            }
-//        }
 
-        if (playerStatus == STATUS_PLAYING) {
-            if (playDuration > 0) {
-                unsigned long elapsedTime = (currentTime - playStartTime) / 1000; // Convert to seconds
-                unsigned long totalDuration = playDuration / 1000; // Convert to seconds
-                unsigned long remainingTime = (elapsedTime < totalDuration) ? (totalDuration - elapsedTime) : 0;
 
-                // Create progress bar
-                const int barWidth = 26;
-                int progress = (elapsedTime * barWidth) / totalDuration;
-                char progressBar[barWidth + 1];
-                for (int i = 0; i < barWidth; i++) {
-                    progressBar[i] = (i < progress) ? '=' : '-';
-                }
-                progressBar[barWidth] = '\0';
+if (playerStatus == STATUS_PLAYING) {
+    Serial.printf("playDuration: %lu ms (playing)\n", playDuration);
+    if (playDuration > 0) {
+        Serial.printf("        │ Play duration:  %lu ms\n", playDuration);
 
-                Serial.printf("        │ Progress: [%s] %lu/%lu s\n", progressBar, elapsedTime, totalDuration);
-                Serial.printf("        │ Remaining: %lu s\n", remainingTime);
 
-                //                Serial.printf("        │ Playback progress: %lu s / %lu s\n", elapsedTime, totalDuration);
-                //                Serial.printf("        │ Remaining time:    %lu s\n", remainingTime);
-            } else {
-                unsigned long elapsedTime = (currentTime - playStartTime) / 1000; // Convert to seconds
-                Serial.printf("        │ Playback time:     %lu s (No duration set)\n", elapsedTime);
-            }
+        unsigned long long elapsedTime = (unsigned long long)(currentTime - playStartTime) / 1000; // Convert to seconds
+        unsigned long long totalDuration = (unsigned long long)playDuration / 1000; // Convert to seconds
+        unsigned long long remainingTime = (elapsedTime < totalDuration) ? (totalDuration - elapsedTime) : 0;
+
+        // Create progress bar
+        const int barWidth = 26;
+        int progress = 0;
+        if (totalDuration > 0) { // Avoid division by zero
+            progress = (int)(((double)elapsedTime / totalDuration) * barWidth);
         }
+        progress = constrain(progress, 0, barWidth); // Ensure progress is within bounds
+
+        char progressBar[barWidth + 1];
+        for (int i = 0; i < barWidth; i++) {
+            progressBar[i] = (i < progress) ? '=' : '-';
+        }
+        progressBar[barWidth] = '\0';
+
+        Serial.printf("        │ Progress: [%s] %llu/%llu s\n", progressBar, elapsedTime, totalDuration);
+        Serial.printf("        │ Remaining: %llu s\n", remainingTime);
+    } else {
+        unsigned long elapsedTime = (currentTime - playStartTime) / 1000; // Convert to seconds
+        Serial.printf("        │ Playback time:     %lu s (No duration set)\n", elapsedTime);
+    }
+}
 
         if (fadeDirection != FadeDirection::NONE) {
             Serial.printf("        │ Fade in progress: Direction: %s\n", (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
@@ -299,6 +294,7 @@ void PlayerController::update() {
         unsigned long elapsedTime = currentTime - playStartTime;
         if (elapsedTime >= playDuration) {
             playerStatus = STATUS_STOPPED;
+            currentTrack = 0;
             Serial.printf("%s - Sound finished playing. Duration: %lu ms, New playerStatus: %s\n",
                   __PRETTY_FUNCTION__, playDuration, playerStatusToString(playerStatus));
             playDuration = 0; // Reset playDuration

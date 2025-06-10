@@ -28,6 +28,9 @@ void DYPlayerController::begin() {
 }
 
 void DYPlayerController::playSound(int track) {
+    // Call base class first for setting status
+    PlayerController::playSound(track);
+
     Serial.printf("  %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
     char path[11];
     sprintf(path, "/%05d.mp3", track);
@@ -35,15 +38,13 @@ void DYPlayerController::playSound(int track) {
     Serial.printf("      myDYPlayer.playSpecifiedDevicePath(%s)\n", path);
     myDYPlayer.playSpecifiedDevicePath(DY::Device::Sd, path);
 
-    // Call base class for setting status
-    PlayerController::playSound(track);
 }
 
 void DYPlayerController::playSound(int track, uint32_t durationMs) {
-    playSound(track);
-
-    // Call base class for setting status and timing
+    // Call base class first for setting status and timing
     PlayerController::playSound(track, durationMs);
+
+    playSound(track);
 }
 
 void DYPlayerController::stopSound() {

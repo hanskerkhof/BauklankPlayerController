@@ -40,7 +40,7 @@ void DFRobotPlayerController::begin() {
 }
 
 void DFRobotPlayerController::playSound(int track) {
-  // Call base class for setting status
+  // Call base class first for setting status
   PlayerController::playSound(track);
 
   int _folder = ((track - 1) / 255) + 1;
@@ -52,7 +52,7 @@ void DFRobotPlayerController::playSound(int track) {
 }
 
 void DFRobotPlayerController::playSound(int track, uint32_t durationMs) {
-    // Call base class for setting status and timing
+    // Call base class first for setting status and timing
     PlayerController::playSound(track, durationMs);
 
     playSound(track);

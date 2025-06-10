@@ -39,6 +39,9 @@ void MDPlayerController::disableLoop() {
 }
 
 void MDPlayerController::playSound(int track) {
+  // Call base class first for setting status
+  PlayerController::playSound(track);
+
   Serial.printf("  %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
   uint16_t trackNumber = track;
   uint8_t _folder, _track;
@@ -48,14 +51,13 @@ void MDPlayerController::playSound(int track) {
   Serial.printf("  %s - mdPlayerCommand(CMD_PLAY_FOLDER_FILE, 0x%X (Hex), %u (Dec))\n", __PRETTY_FUNCTION__, parameter, parameter);
   mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
 
-  // Call base class for setting status
-  PlayerController::playSound(track);
 }
 
 void MDPlayerController::playSound(int track, uint32_t durationMs) {
-    playSound(track);
-    // Call base class for setting status and timing
+    // Call base class first for setting status and timing
     PlayerController::playSound(track, durationMs);
+
+    playSound(track);
 }
 
 void MDPlayerController::stopSound() {
