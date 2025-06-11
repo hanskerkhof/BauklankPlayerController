@@ -43,7 +43,6 @@ void PlayerController::playSound(int track, unsigned long durationMs) {
                   __PRETTY_FUNCTION__, track, durationMs, playStartTime, playStartTime + playDuration);
 
     playSound(track);
-//    displayPlayerStatusBox();
 }
 
 void PlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
@@ -56,7 +55,6 @@ void PlayerController::playSound(int track, unsigned long durationMs, const char
                   __PRETTY_FUNCTION__, track, currentTrackName, durationMs, playStartTime, playStartTime + playDuration);
 
     playSound(track);
-//   displayPlayerStatusBox();
 }
 
 void PlayerController::stopSound() {
@@ -65,7 +63,6 @@ void PlayerController::stopSound() {
     currentTrack = 0;
     currentTrackName = "";
     Serial.printf("  ⏹️ %s - Stop sound, playerStatus: %d\n", __PRETTY_FUNCTION__, playerStatus);
-//    displayPlayerStatusBox();
 }
 
 void PlayerController::setEqualizerPreset(EqualizerPreset preset) {
@@ -274,9 +271,9 @@ void PlayerController::displayEqualizerSettings() {
     // Note: You may need to adjust these based on your actual equalizer implementation
     Serial.println(F("    │                                                       |"));
     Serial.println(F("    │ Band Settings:                                        |"));
-    Serial.printf("    │   Bass:   [%-10s] %-27d|\n", createProgressBar(bassLevel, 10), bassLevel);
-    Serial.printf("    │   Mid:    [%-10s] %-27d|\n", createProgressBar(midLevel, 10), midLevel);
-    Serial.printf("    │   Treble: [%-10s] %-27d|\n", createProgressBar(trebleLevel, 10), trebleLevel);
+    Serial.printf("    │   Bass:   [%-10s] %-15d|\n", createProgressBar(bassLevel, 26), bassLevel);
+    Serial.printf("    │   Mid:    [%-10s] %-15d|\n", createProgressBar(midLevel, 26), midLevel);
+    Serial.printf("    │   Treble: [%-10s] %-15d|\n", createProgressBar(trebleLevel, 26), trebleLevel);
 
     Serial.println(F("    └───────────────────────────────────────────────────────┘"));
 }
@@ -298,12 +295,20 @@ void PlayerController::displayVolumeProgressBar() {
     const int volumeBarWidth = 26;
     int volumePercentage = (currentVolume * 100) / MAX_VOLUME;
     const char* volumeProgressBar = createProgressBar(volumePercentage, volumeBarWidth);
-    Serial.printf("    │ Volume:         [%s] %2d/%-2d    |\n", volumeProgressBar, currentVolume, MAX_VOLUME);
+    Serial.printf("    │ Volume:         %s %2d/%-2d      |\n", volumeProgressBar, currentVolume, MAX_VOLUME);
 }
 
 void PlayerController::displayPlayerStatusBox() {
+    static int statusUpdateCounter = 0;
+    statusUpdateCounter++;
+
+    // Reset counter when it reaches 7 digits (1,000,000)
+    if (statusUpdateCounter >= 1000000) {
+        statusUpdateCounter = 1;  // Reset to 1 instead of 0 to avoid showing #000000
+    }
+
     Serial.println(F("    ┌───────────────────────────────────────────────────────┐"));
-    Serial.println(F("    |        --- PlayerController Status Update ---         |"));
+       Serial.printf("    | PlayerController Status Update                 %6d |\n", statusUpdateCounter);
     Serial.println(F("    +───────────────────────────────────────────────────────+"));
 
     Serial.printf("    │ Player type:    %-38s|\n", getPlayerTypeName());
@@ -370,53 +375,23 @@ void PlayerController::displayPlayerStatusBox() {
 
 void PlayerController::update() {
     unsigned long currentTime = millis();
-//    bool statusChanged = false;
+    // Define a static variable lastPlayerStatus to store the last player status
+    // This variable retains its value between function calls
+    // It is only accessible within this update() method
+    // It is initialized only once, when the function is first called
+    static PlayerStatus lastPlayerStatus = STATUS_STOPPED;
 
     // Periodic update
     if (currentTime - lastPeriodicUpdate >= DISPLAY_STATUS_UPDATE_INTERVAL) {
-      Serial.println(F("    ��───────────────────────────────────────────────────────��"));
         lastPeriodicUpdate = currentTime;
-        displayEqualizerSettings();
+        // displayEqualizerSettings();
+      if (playerStatus != STATUS_STOPPED) {
+        Serial.println(F("    ┌───────────────────────────────────────────────────────┐"));
+        Serial.printf("    | periodic update & status: %s\n", playerStatusToString(playerStatus) );
         displayPlayerStatusBox();
-//        statusChanged = true;
-    // Display status box only if status changed and not stopped
-//          if (statusChanged && playerStatus != STATUS_STOPPED) {
-          if (playerStatus != STATUS_STOPPED) {
-      //        displayPlayerStatusBox();
-          }
-
-
+      }
     }
 
-
-    //    // TODO do a periodic update every DISPLAY_STATUS_UPDATE_INTERVAL seconds and print statistics like sound playing status, current time, etc.
-    //    // Periodic update every 5 seconds
-    //    if (currentTime - lastPeriodicUpdate >= DISPLAY_STATUS_UPDATE_INTERVAL) {
-    //        lastPeriodicUpdate = currentTime;
-    //
-    //        if (playerStatus != STATUS_STOPPED) {
-    //          PlayerController::displayPlayerStatusBox();
-    //        }
-    //    }
-
-    //    // Check if sound is playing and duration is set
-    //    if (playerStatus == STATUS_PLAYING && playDuration > 0) {
-    //        unsigned long elapsedTime = currentTime - playStartTime;
-    //
-    //        if (elapsedTime >= playDuration) {
-    ////            displayPlayerStatusBox(); // Update status box
-    //
-    //            playerStatus = STATUS_STOPPED;
-    //            // TODO create a method for resetting the track when it finishes playing
-    //            currentTrack = 0;
-    //            currentTrackName = "";
-    //            Serial.printf("  🏁 %s - Sound finished playing. Duration: %lu ms, New playerStatus: %s\n",
-    //                  __PRETTY_FUNCTION__, playDuration, playerStatusToString(playerStatus));
-    //            playDuration = 0; // Reset playDuration
-    //
-    ////            displayPlayerStatusBox(); // Update status box
-    //        }
-    //    }
     // Check if sound is playing and duration is set
     if (playerStatus == STATUS_PLAYING && playDuration > 0) {
         unsigned long elapsedTime = currentTime - playStartTime;
@@ -428,7 +403,6 @@ void PlayerController::update() {
             Serial.printf("  🏁 %s - Sound finished playing. Duration: %lu ms, New playerStatus: %s\n",
                   __PRETTY_FUNCTION__, playDuration, playerStatusToString(playerStatus));
             playDuration = 0; // Reset playDuration
-//            statusChanged = true;
         }
     }
 
@@ -466,5 +440,13 @@ void PlayerController::update() {
                 Serial.printf("                %s - Sound stopped after fade completion\n", __PRETTY_FUNCTION__);
             }
         }
+    }
+
+    // Check if player status has changed
+    if (playerStatus != lastPlayerStatus) {
+      Serial.println(F("    ┌───────────────────────────────────────────────────────┐"));
+         Serial.printf("    | status change from %s => %s\n", playerStatusToString(lastPlayerStatus), playerStatusToString(playerStatus));
+        displayPlayerStatusBox();
+        lastPlayerStatus = playerStatus;
     }
 }

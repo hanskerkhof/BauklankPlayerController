@@ -81,7 +81,7 @@ void setup() {
   updateTrackName();
 
   // Initialize my player
- player.begin();
+  player.begin();
 
   // Set the equalizer preset
   player.setEqualizerPreset(PlayerController::EqualizerPreset::ROCK);

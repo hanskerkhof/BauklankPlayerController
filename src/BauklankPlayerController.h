@@ -62,8 +62,8 @@ public:
     // Helpers
     const char* playerStatusToString(PlayerStatus status) {
         switch (status) {
-            case STATUS_STOPPED: return "STOPPED";
-            case STATUS_PLAYING: return "PLAYING";
+            case STATUS_STOPPED: return "STATUS_STOPPED";
+            case STATUS_PLAYING: return "STATUS_PLAYING";
             default: return "UNKNOWN_STATUS";
         }
     }
