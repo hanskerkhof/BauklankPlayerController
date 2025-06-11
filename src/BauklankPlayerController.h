@@ -8,7 +8,7 @@
 
 #ifndef BAUKLANK_PLAYER_CONTROLLER_DEBUG
 // Enable debug output for this class.
-#define BAUKLANK_PLAYER_CONTROLLER_DEBUG false
+#define BAUKLANK_PLAYER_CONTROLLER_DEBUG true
 #endif
 
 #ifndef DISPLAY_PLAYER_STATUS_ENABLED
@@ -18,7 +18,7 @@
 
 #ifndef DISPLAY_PLAYER_STATUS_PERIODIC
 // Display player status every 5 seconds.
-#define DISPLAY_PLAYER_STATUS_PERIODIC true
+#define DISPLAY_PLAYER_STATUS_PERIODIC false
 #endif
 
 #include <stdint.h>

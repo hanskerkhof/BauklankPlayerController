@@ -7,30 +7,30 @@ DYPlayerController::DYPlayerController(int rxPin, int txPin)
 
 void DYPlayerController::begin() {
     #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-        Serial.println(F("  SETUP - DY_PLAYER_ENABLED"));
-        Serial.printf("  SETUP - mySoftwareSerial.begin(%d)\n", 9600);
+        Serial.printf("  %s - SETUP - DY_PLAYER_ENABLED", __PRETTY_FUNCTION__);
+        Serial.printf("  %s - SETUP - mySoftwareSerial.begin(%d)\n", __PRETTY_FUNCTION__, 9600);
     #endif
     mySoftwareSerial.begin(9600);
     delay(300);  // Give some time for the serial connection to establish
     int slp = 30;
     delay(slp);
     #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-        Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.begin()\n");
+        Serial.printf("  %s - SETUP - DY_PLAYER_ENABLED myDYPlayer.begin()\n", __PRETTY_FUNCTION__);
     #endif
     myDYPlayer.begin();
     delay(slp);
     #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-        Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.setPlayingDevice(%d)\n", DY::Device::Sd);
+        Serial.printf("  %s - SETUP - DY_PLAYER_ENABLED myDYPlayer.setPlayingDevice(%d)\n", __PRETTY_FUNCTION__, DY::Device::Sd);
     #endif
     myDYPlayer.setPlayingDevice(DY::Device::Sd);
     delay(slp);
     #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-        Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.setCycleMode(%d)\n", DY::PlayMode::OneOff);
+        Serial.printf("  %s - SETUP - DY_PLAYER_ENABLED myDYPlayer.setCycleMode(%d)\n", __PRETTY_FUNCTION__, DY::PlayMode::OneOff);
     #endif
     myDYPlayer.setCycleMode(DY::PlayMode::OneOff);
     delay(slp);
     #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-        Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.setEq(%d)\n", DY::Eq::Normal);
+        Serial.printf("  %s - SETUP - DY_PLAYER_ENABLED myDYPlayer.setEq(%d)\n", __PRETTY_FUNCTION__, DY::Eq::Normal);
     #endif
     myDYPlayer.setEq(DY::Eq::Normal);
     delay(slp);

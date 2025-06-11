@@ -37,13 +37,14 @@ DYPlayerController player(DY_PLAYER_RX_PIN, DY_PLAYER_TX_PIN);
 DFRobotPlayerController player(DF_PLAYER_RX_PIN, DF_PLAYER_TX_PIN);
 #endif
 
-int soundIndex = 1;
-const int MIN_SOUND_INDEX = 1;
-const int MAX_SOUND_INDEX = 10;
+const int MIN_SOUND_INDEX = 5;
+const int MAX_SOUND_INDEX = 8;
+int soundIndex = MIN_SOUND_INDEX;
 uint8_t playerVolume = 22;
 // Define minutes and seconds for the duration of the track
 const uint8_t minutes = 0;
-const uint8_t seconds = 20;
+const uint8_t seconds = 3;
+// const uint8_t seconds = 20;
 static const uint32_t trackDurationMs = ((minutes * 60) + seconds) * 1000;
 char trackName[20];  // Adjust the size as needed
 

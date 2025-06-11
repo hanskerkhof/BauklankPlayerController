@@ -451,8 +451,11 @@ void PlayerController::update() {
             playerStatus = STATUS_STOPPED;
             currentTrack = 0;
             currentTrackName = "";
-            Serial.printf("  🏁 %s - Sound finished playing. Duration: %lu ms, New playerStatus: %s\n",
-                  __PRETTY_FUNCTION__, playDuration, playerStatusToString(playerStatus));
+
+            #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+                Serial.printf("  🏁 %s - Sound finished playing. Duration: %lu ms, New playerStatus: %s\n",
+                      __PRETTY_FUNCTION__, playDuration, playerStatusToString(playerStatus));
+            #endif
             playDuration = 0; // Reset playDuration
         }
     }
@@ -500,8 +503,13 @@ void PlayerController::update() {
     // Check if player status has changed
     #if DISPLAY_PLAYER_STATUS_ENABLED == true
     if (playerStatus != lastPlayerStatus) {
-      Serial.println(F("    ┌───────────────────────────────────────────────────────┐"));
-         Serial.printf("    | playerStatus change from %s => %s\n", playerStatusToString(lastPlayerStatus), playerStatusToString(playerStatus));
+        Serial.println(F("    ┌───────────────────────────────────────────────────────┐"));
+        char statusChangeStr[53]; // 53 characters + null terminator
+        snprintf(statusChangeStr, sizeof(statusChangeStr),
+            "Status from %-12s => %-12s",
+            playerStatusToString(lastPlayerStatus),
+            playerStatusToString(playerStatus));
+        Serial.printf("    | %-53s |\n", statusChangeStr);
         displayPlayerStatusBox();
         lastPlayerStatus = playerStatus;
     }
