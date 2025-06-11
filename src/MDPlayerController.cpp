@@ -14,39 +14,49 @@ MDPlayerController::MDPlayerController(int rxPin, int txPin)
 }
 
 void MDPlayerController::begin() {
-    Serial.println(F("  SETUP - MD_PLAYER_ENABLED && PLAYER_NO_MD_LIBRARY"));
-    Serial.printf("  SETUP - mySoftwareSerial.begin(%d)\n", 9600);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.println(F("  SETUP - MD_PLAYER_ENABLED && PLAYER_NO_MD_LIBRARY"));
+        Serial.printf("  SETUP - mySoftwareSerial.begin(%d)\n", 9600);
+    #endif
     mySoftwareSerial.begin(9600);
     delay(300);  // (was 1000) TODO could this be a shorter delay?
 }
 
 void MDPlayerController::selectTFCard() {
-    Serial.printf("  Selecting TF card\n");
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  Selecting TF card\n");
+    #endif
     mdPlayerCommand(CMD::SEL_DEV, DEV_TF);  // select the TF card
     delay(300);
 }
 
 void MDPlayerController::enableLoop() {
-    Serial.println(F("MDPlayerController: Enabling loop"));
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.println(F("MDPlayerController: Enabling loop"));
+    #endif
     mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);  // select the TF card
     isLooping = true;
 }
 
 void MDPlayerController::disableLoop() {
-    Serial.println(F("DYPlayerController: Disabling loop"));
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.println(F("DYPlayerController: Disabling loop"));
+    #endif
     mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);  // select the TF card
     isLooping = false;
 }
 
 void MDPlayerController::playSound(int track) {
-  Serial.printf("  ▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
-  uint16_t trackNumber = track;
-  uint8_t _folder, _track;
-  decodeFolderAndTrack(trackNumber, _folder, _track);
-  uint16_t parameter = (_folder << 8) | _track;
-  mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
-  // Call base class for setting status
-  PlayerController::playSound(track);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  ▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
+    #endif
+    uint16_t trackNumber = track;
+    uint8_t _folder, _track;
+    decodeFolderAndTrack(trackNumber, _folder, _track);
+    uint16_t parameter = (_folder << 8) | _track;
+    mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
+    // Call base class for setting status
+    PlayerController::playSound(track);
 }
 
 void MDPlayerController::playSound(int track, unsigned long durationMs) {
@@ -63,7 +73,9 @@ void MDPlayerController::playSound(int track, unsigned long durationMs, const ch
 }
 
 void MDPlayerController::stopSound() {
-    Serial.printf("  ⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  ⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
+    #endif
     mdPlayerCommand(CMD::STOP_PLAY, 0);
 
     // Call base class for setting status
@@ -93,9 +105,13 @@ void MDPlayerController::setPlayerVolume(uint8_t playerVolume) {
     if (playerVolume != lastSetPlayerVolume) {
         mdPlayerCommand(SET_VOLUME, playerVolume);
         lastSetPlayerVolume = playerVolume;
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
 //        Serial.printf("%s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
+        #endif
     } else {
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
 //         Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
+        #endif
     }
 }
 
@@ -126,7 +142,9 @@ void MDPlayerController::setEqualizerPreset(EqualizerPreset preset) {
     }
 
     mdPlayerCommand(SET_EQUALIZER, mdPreset);
-    Serial.printf("MDPlayer: Set equalizer preset to %d\n", static_cast<int>(preset));
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("MDPlayer: Set equalizer preset to %d\n", static_cast<int>(preset));
+    #endif
     // call base class for status
     PlayerController::setEqualizerPreset(preset);
 }

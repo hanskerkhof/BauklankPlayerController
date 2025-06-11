@@ -12,42 +12,44 @@ void DFRobotPlayerController::begin() {
     mySoftwareSerial.begin(9600);
     delay(300);  // Give some time for the serial connection to establish
 
-    Serial.println(F("  SETUP - DFRobot DFPlayer Mini"));
-    Serial.println(F("  SETUP - Initializing DFPlayer ... (May take 3~5 seconds)"));
-
-    // This comment saved me!!!
-    // https://github.com/DFRobot/DFRobotDFPlayerMini/issues/9#issuecomment-514548776
-    Serial.println(F("  DFPlayer SetTimeOut(1000)"));
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.println(F("  SETUP - DFRobot DFPlayer Mini"));
+        Serial.println(F("  SETUP - Initializing DFPlayer ... (May take 3~5 seconds)"));
+        // This comment saved me!!!
+        // https://github.com/DFRobot/DFRobotDFPlayerMini/issues/9#issuecomment-514548776
+        Serial.println(F("  DFPlayer SetTimeOut(1000)"));
+    #endif
     myDFPlayer.setTimeOut(1000);  //Set serial communication time out to 1000ms
     delay(30);
 
     // if (!myDFPlayer.begin(mySoftwareSerial, /*isACK = */true, /*doReset = */false)) {  //Use serial to communicate with mp3.
 //    if (!myDFPlayer.begin(mySoftwareSerial, /*isACK = */false, /*doReset = */true)) {  //Use serial to communicate with mp3.
-    if (!myDFPlayer.begin(mySoftwareSerial, /*isACK = */true, /*doReset = */false)) {  //Use serial to communicate with mp3.
-      Serial.println(F("  SETUP - Unable to begin:"));
-      Serial.println(F("          1.Please recheck the connection!"));
-      Serial.println(F("          2.Please insert the SD card!"));
-      while(true){
-        delay(0); // Code to compatible with ESP8266 watch dog.
-      }
+    if (!myDFPlayer.begin(mySoftwareSerial, /*isACK = */true, /*doReset = */false)) {
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.println(F("  SETUP - Unable to begin:"));
+            Serial.println(F("          1.Please recheck the connection!"));
+            Serial.println(F("          2.Please insert the SD card!"));
+        #endif
+        while(true){
+            delay(0); // Code to compatible with ESP8266 watch dog.
+          }
+        }
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.println(F("  SETUP - DFPlayer Mini connected."));
+        #endif
     }
-    Serial.println(F("  SETUP - DFPlayer Mini connected."));
-//    delay(300);
-//    myDFPlayer.stop();
-//    delay(30);
-//    myDFPlayer.reset();  // reset the DFPlayer
-//    delay(30);
-}
 
 void DFRobotPlayerController::playSound(int track) {
-  int _folder = ((track - 1) / 255) + 1;
-  int _track = ((track - 1) % 255) + 1;
-  Serial.printf("  ▶️ %s - myDFPlayer.playFolder(%d, %d)\n",  __PRETTY_FUNCTION__, _folder, _track);
-  myDFPlayer.playFolder(_folder, _track);
-  //  delay(20);
+    int _folder = ((track - 1) / 255) + 1;
+    int _track = ((track - 1) % 255) + 1;
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  ▶️ %s - myDFPlayer.playFolder(%d, %d)\n",  __PRETTY_FUNCTION__, _folder, _track);
+    #endif
+    myDFPlayer.playFolder(_folder, _track);
+    //  delay(20);
 
-  // Call base class for status
-  PlayerController::playSound(track);
+    // Call base class for status
+    PlayerController::playSound(track);
 }
 
 void DFRobotPlayerController::playSound(int track, unsigned long durationMs) {
@@ -67,7 +69,9 @@ void DFRobotPlayerController::playSound(int track, unsigned long durationMs, con
 }
 
 void DFRobotPlayerController::stopSound() {
-    Serial.printf("  ⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  ⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
+    #endif
     myDFPlayer.stop();
 
     // Call base class for status
@@ -78,9 +82,13 @@ void DFRobotPlayerController::setPlayerVolume(uint8_t _playerVolume) {
     if (_playerVolume != lastSetPlayerVolume) {
         myDFPlayer.volume(_playerVolume);
         lastSetPlayerVolume = _playerVolume;
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
 //        Serial.printf("%s - Set DF Player volume to %d\n", __PRETTY_FUNCTION__, _playerVolume);
+        #endif
     } else {
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
 //         Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, _playerVolume);
+        #endif
     }
     delay(20);
 }

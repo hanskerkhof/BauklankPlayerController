@@ -3,36 +3,49 @@
 
 DYPlayerController::DYPlayerController(int rxPin, int txPin)
     : mySoftwareSerial(rxPin, txPin), myDYPlayer(&mySoftwareSerial) {
-    // Constructor body
 }
 
 void DYPlayerController::begin() {
-    Serial.println(F("  SETUP - DY_PLAYER_ENABLED"));
-    Serial.printf("  SETUP - mySoftwareSerial.begin(%d)\n", 9600);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.println(F("  SETUP - DY_PLAYER_ENABLED"));
+        Serial.printf("  SETUP - mySoftwareSerial.begin(%d)\n", 9600);
+    #endif
     mySoftwareSerial.begin(9600);
     delay(300);  // Give some time for the serial connection to establish
     int slp = 30;
     delay(slp);
-    Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.begin()\n");
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.begin()\n");
+    #endif
     myDYPlayer.begin();
     delay(slp);
-    Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.setPlayingDevice(%d)\n", DY::Device::Sd);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.setPlayingDevice(%d)\n", DY::Device::Sd);
+    #endif
     myDYPlayer.setPlayingDevice(DY::Device::Sd);
     delay(slp);
-    Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.setCycleMode(%d)\n", DY::PlayMode::OneOff);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.setCycleMode(%d)\n", DY::PlayMode::OneOff);
+    #endif
     myDYPlayer.setCycleMode(DY::PlayMode::OneOff);
     delay(slp);
-    Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.setEq(%d)\n", DY::Eq::Normal);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  SETUP - DY_PLAYER_ENABLED myDYPlayer.setEq(%d)\n", DY::Eq::Normal);
+    #endif
     myDYPlayer.setEq(DY::Eq::Normal);
     delay(slp);
 }
 
 void DYPlayerController::playSound(int track) {
-    Serial.printf("▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
+    #endif
     char path[11];
     sprintf(path, "/%05d.mp3", track);
-    Serial.printf("     Playing track: %d, path: %s\n", track, path);
-    Serial.printf("     myDYPlayer.playSpecifiedDevicePath(%s)\n", path);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+       Serial.printf("     Playing track: %d, path: %s\n", track, path);
+        Serial.printf("     myDYPlayer.playSpecifiedDevicePath(%s)\n", path);
+    #endif
     myDYPlayer.playSpecifiedDevicePath(DY::Device::Sd, path);
 
     // Call base class for status
@@ -56,7 +69,9 @@ void DYPlayerController::playSound(int track, unsigned long durationMs, const ch
 }
 
 void DYPlayerController::stopSound() {
-    Serial.printf("⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
+    #endif
     myDYPlayer.stop();
 
     // Call base class for status
@@ -64,23 +79,31 @@ void DYPlayerController::stopSound() {
 }
 
 void DYPlayerController::setPlayerVolume(uint8_t playerVolume) {
-  if (playerVolume != lastSetPlayerVolume) {
-      myDYPlayer.setVolume(playerVolume);
-      lastSetPlayerVolume = playerVolume;
-//      Serial.printf("%s - Set DY Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
-  } else {
-//       Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
-  }
+    if (playerVolume != lastSetPlayerVolume) {
+        myDYPlayer.setVolume(playerVolume);
+        lastSetPlayerVolume = playerVolume;
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        //      Serial.printf("%s - Set DY Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
+        #endif
+    } else {
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        //       Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
+        #endif
+    }
 }
 
 void DYPlayerController::enableLoop() {
-    Serial.println(F("DYPlayerController: Enabling loop"));
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.println(F("DYPlayerController: Enabling loop"));
+    #endif
     myDYPlayer.setCycleMode(DY::PlayMode::RepeatOne);
     isLooping = true;
 }
 
 void DYPlayerController::disableLoop() {
-    Serial.println(F("DYPlayerController: Disabling loop"));
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.println(F("DYPlayerController: Disabling loop"));
+    #endif
     myDYPlayer.setCycleMode(DY::PlayMode::OneOff);
     isLooping = false;
 }
@@ -109,7 +132,9 @@ void DYPlayerController::setEqualizerPreset(EqualizerPreset preset) {
             break;
     }
     myDYPlayer.setEq(dyPreset);
-    Serial.printf("DYPlayer: Set equalizer preset to %d\n", static_cast<int>(preset));
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("DYPlayer: Set equalizer preset to %d\n", static_cast<int>(preset));
+    #endif
     // call base class for status
     PlayerController::setEqualizerPreset(preset);
 }

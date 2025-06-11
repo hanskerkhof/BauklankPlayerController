@@ -1,6 +1,25 @@
 // BauklankPlayerController.h
-#ifndef PLAYER_CONTROLLER_H
-#define PLAYER_CONTROLLER_H
+#ifndef BAUKLANK_PLAYER_CONTROLLER_H
+#define BAUKLANK_PLAYER_CONTROLLER_H
+
+#if __has_include("debug.h")
+    #include "debug.h"
+#endif
+
+#ifndef BAUKLANK_PLAYER_CONTROLLER_DEBUG
+// Enable debug output for this class.
+#define BAUKLANK_PLAYER_CONTROLLER_DEBUG false
+#endif
+
+#ifndef DISPLAY_PLAYER_STATUS_ENABLED
+// Display player status on a player state change.
+#define DISPLAY_PLAYER_STATUS_ENABLED true
+#endif
+
+#ifndef DISPLAY_PLAYER_STATUS_PERIODIC
+// Display player status every 5 seconds.
+#define DISPLAY_PLAYER_STATUS_PERIODIC true
+#endif
 
 #include <stdint.h>
 
@@ -140,4 +159,4 @@ private:
     int trebleLevel = 50; // Example default value
 };
 
-#endif // PLAYER_CONTROLLER_H
+#endif // BAUKLANK_PLAYER_CONTROLLER_H

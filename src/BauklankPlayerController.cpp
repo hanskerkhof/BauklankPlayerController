@@ -1,13 +1,17 @@
-// PlayerController.cpp
+// BauklankPlayerController.cpp
 #include "BauklankPlayerController.h"
+
+#if __has_include("debug.h")
+    #include "debug.h"
+#endif
+
 #include <Arduino.h>
 
 unsigned long lastPeriodicUpdate = 0;
-unsigned long DISPLAY_STATUS_UPDATE_INTERVAL = 5000;
+unsigned long PLAYER_STATUS_INTERVAL_MS = 5000;
 
 void PlayerController::setVolume(int _volume) {
     currentVolume = constrain(_volume, MIN_VOLUME, MAX_VOLUME);
-    // Serial.printf("%s - Setting volume to %d\n", __PRETTY_FUNCTION__, currentVolume);
     setPlayerVolume(currentVolume);
 }
 
@@ -17,7 +21,9 @@ int PlayerController::getVolume() {
 
 void PlayerController::playSoundRandom(int minTrack, int maxTrack) {
     int rnd = random(minTrack, maxTrack + 1);
-    Serial.printf("  🎲▶️ %s - Playing random track: %d\n", __PRETTY_FUNCTION__, rnd);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  🎲▶️ %s - Playing random track: %d\n", __PRETTY_FUNCTION__, rnd);
+    #endif
     playSound(rnd);
 }
 
@@ -30,7 +36,9 @@ void PlayerController::decodeFolderAndTrack(uint16_t trackNumber, uint8_t& folde
 void PlayerController::playSound(int track) {
     playerStatus = STATUS_PLAYING;
     currentTrack = track;
-    Serial.printf("  ▶️ %s - Playing track: %d, playerStatus: %s\n", __PRETTY_FUNCTION__, track, playerStatusToString(playerStatus));
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  ▶️ %s - Playing track: %d, playerStatus: %s\n", __PRETTY_FUNCTION__, track, playerStatusToString(playerStatus));
+    #endif
 }
 
 void PlayerController::playSound(int track, unsigned long durationMs) {
@@ -39,8 +47,10 @@ void PlayerController::playSound(int track, unsigned long durationMs) {
     playStartTime = millis();
     playDuration = durationMs;
 
-    Serial.printf("  ▶️ %s - Playing track: %d, duration: %d ms, startTime: %lu, endTime: %lu\n",
-                  __PRETTY_FUNCTION__, track, durationMs, playStartTime, playStartTime + playDuration);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  ▶️ %s - Playing track: %d, duration: %d ms, startTime: %lu, endTime: %lu\n",
+                      __PRETTY_FUNCTION__, track, durationMs, playStartTime, playStartTime + playDuration);
+    #endif
 
     playSound(track);
 }
@@ -51,9 +61,10 @@ void PlayerController::playSound(int track, unsigned long durationMs, const char
     playDuration = durationMs;
     currentTrackName = trackName;
 
-    Serial.printf("  ▶️ %s - Playing track: %d (%s), duration: %d ms, startTime: %lu, endTime: %lu\n",
-                  __PRETTY_FUNCTION__, track, currentTrackName, durationMs, playStartTime, playStartTime + playDuration);
-
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  ▶️ %s - Playing track: %d (%s), duration: %d ms, startTime: %lu, endTime: %lu\n",
+                      __PRETTY_FUNCTION__, track, currentTrackName, durationMs, playStartTime, playStartTime + playDuration);
+    #endif
     playSound(track);
 }
 
@@ -62,15 +73,20 @@ void PlayerController::stopSound() {
     playerStatus = STATUS_STOPPED;
     currentTrack = 0;
     currentTrackName = "";
-    Serial.printf("  ⏹️ %s - Stop sound, playerStatus: %d\n", __PRETTY_FUNCTION__, playerStatus);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  ⏹️ %s - Stop sound, playerStatus: %d\n", __PRETTY_FUNCTION__, playerStatus);
+    #endif
 }
 
 void PlayerController::setEqualizerPreset(EqualizerPreset preset) {
     // Default implementation
-    Serial.printf("  🎚️ %s - Setting equalizer preset: ", __PRETTY_FUNCTION__);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  🎚️ %s - Setting equalizer preset: ", __PRETTY_FUNCTION__);
+    #endif
     currentEqualizerPreset = preset;
     // Note: This default implementation doesn't actually change any settings on the player.
     // Derived classes should override this method to implement actual functionality to set the EQ on the player.
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
     switch (preset) {
         case EqualizerPreset::NORMAL:
             Serial.println("NORMAL");
@@ -94,22 +110,29 @@ void PlayerController::setEqualizerPreset(EqualizerPreset preset) {
             Serial.println("Unknown");
             break;
     }
+    #endif
 }
 
 void PlayerController::fadeIn(int durationMs, int targetVolume) {
-    Serial.printf("  📈 %s - Fade in requested: duration %d ms, target volume %d\n", __PRETTY_FUNCTION__, durationMs, targetVolume);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  📈 %s - Fade in requested: duration %d ms, target volume %d\n", __PRETTY_FUNCTION__, durationMs, targetVolume);
+    #endif
 
     if (fadeDirection == FadeDirection::NONE) {
         fadeStartTime = millis();
         fadeDirection = FadeDirection::IN;
         currentVolume = constrain(getVolume(), MIN_VOLUME, MAX_VOLUME);
         this->targetVolume = constrain(targetVolume, MIN_VOLUME, MAX_VOLUME);
-        Serial.printf("  🔉 %s - Current volume: %d, Target volume: %d\n", __PRETTY_FUNCTION__, currentVolume, this->targetVolume);
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.printf("  🔉 %s - Current volume: %d, Target volume: %d\n", __PRETTY_FUNCTION__, currentVolume, this->targetVolume);
+        #endif
         if (currentVolume >= this->targetVolume) {
             fadeDirection = FadeDirection::NONE;
-            Serial.printf("  📈🚫 %s - No need to fade in, current volume (%d) is already at or above target (%d)\n",
-                          __PRETTY_FUNCTION__, currentVolume, this->targetVolume);
-            return;
+            #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+                Serial.printf("  📈🚫 %s - No need to fade in, current volume (%d) is already at or above target (%d)\n",
+                              __PRETTY_FUNCTION__, currentVolume, this->targetVolume);
+             #endif
+           return;
         }
 
         int volumeDifference = this->targetVolume - currentVolume;
@@ -118,18 +141,24 @@ void PlayerController::fadeIn(int durationMs, int targetVolume) {
 
         lastFadeTime = millis();
 
-        Serial.printf("  📈🔢 %s - Fade calculation: Volume step: %d, Fade interval: %d ms\n",
-                      __PRETTY_FUNCTION__, volumeStep, fadeIntervalMs);
-    } else {
-        Serial.printf("  📈 %s - Fade already in progress, ignoring new fade request\n", __PRETTY_FUNCTION__);
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.printf("  📈🔢 %s - Fade calculation: Volume step: %d, Fade interval: %d ms\n",
+                          __PRETTY_FUNCTION__, volumeStep, fadeIntervalMs);
+         #endif
+   } else {
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.printf("  📈 %s - Fade already in progress, ignoring new fade request\n", __PRETTY_FUNCTION__);
+        #endif
     }
 }
 
 // TODO add duration and name.
 // Or maybe do a playSound with additional fade params
 void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack) {
-    Serial.printf("  📈 %s - Fade in with track requested: duration %d ms, target volume %d, track %d\n",
-                  __PRETTY_FUNCTION__, durationMs, targetVolume, playTrack);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  📈 %s - Fade in with track requested: duration %d ms, target volume %d, track %d\n",
+                      __PRETTY_FUNCTION__, durationMs, targetVolume, playTrack);
+    #endif
 
     // Set volume to 0 before starting playback
     setVolume(0);
@@ -143,8 +172,10 @@ void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack) {
 }
 
 void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs) {
-    Serial.printf("  📈 %s - Fade in with track and duration requested: fade duration %d ms, target volume %d, track %d, track duration %lu ms\n",
-                  __PRETTY_FUNCTION__, durationMs, targetVolume, playTrack, trackDurationMs);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  📈 %s - Fade in with track and duration requested: fade duration %d ms, target volume %d, track %d, track duration %lu ms\n",
+                      __PRETTY_FUNCTION__, durationMs, targetVolume, playTrack, trackDurationMs);
+    #endif
 
     // Set volume to 0 before starting playback
     setVolume(0);
@@ -163,7 +194,9 @@ void PlayerController::fadeOut(int durationMs, int targetVolume, bool stopSound)
 }
 
 void PlayerController::fadeOut(int durationMs, int targetVolume) {
-    Serial.printf("  📉 %s - Fade out requested: duration %d ms, target volume %d\n", __PRETTY_FUNCTION__, durationMs, targetVolume);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  📉 %s - Fade out requested: duration %d ms, target volume %d\n", __PRETTY_FUNCTION__, durationMs, targetVolume);
+    #endif
 
     if (fadeDirection == FadeDirection::NONE) {
         fadeStartTime = millis();
@@ -171,12 +204,16 @@ void PlayerController::fadeOut(int durationMs, int targetVolume) {
         currentVolume = constrain(getVolume(), MIN_VOLUME, MAX_VOLUME);
         this->targetVolume = constrain(targetVolume, MIN_VOLUME, MAX_VOLUME);
 
-        Serial.printf("  🔉 %s - Current volume: %d, Target volume: %d\n", __PRETTY_FUNCTION__, currentVolume, targetVolume);
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.printf("  🔉 %s - Current volume: %d, Target volume: %d\n", __PRETTY_FUNCTION__, currentVolume, targetVolume);
+        #endif
 
         if (currentVolume <= targetVolume) {
             fadeDirection = FadeDirection::NONE;
-            Serial.printf("  📉🚫 %s - No need to fade out, current volume (%d) is already at or below target (%d)\n",
-                          __PRETTY_FUNCTION__, currentVolume, targetVolume);
+            #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+                Serial.printf("  📉🚫 %s - No need to fade out, current volume (%d) is already at or below target (%d)\n",
+                              __PRETTY_FUNCTION__, currentVolume, targetVolume);
+            #endif
             return;
         }
 
@@ -186,16 +223,22 @@ void PlayerController::fadeOut(int durationMs, int targetVolume) {
 
         lastFadeTime = millis();
 
-        Serial.printf("  📉🔢 %s - Fade calculation: Volume step: %d, Fade interval: %d ms\n",
-                      __PRETTY_FUNCTION__, volumeStep, fadeIntervalMs);
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.printf("  📉🔢 %s - Fade calculation: Volume step: %d, Fade interval: %d ms\n",
+                          __PRETTY_FUNCTION__, volumeStep, fadeIntervalMs);
+        #endif
     } else {
-        Serial.printf("  📉 %s - Fade already in progress, ignoring new fade request\n", __PRETTY_FUNCTION__);
-    }
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.printf("  📉 %s - Fade already in progress, ignoring new fade request\n", __PRETTY_FUNCTION__);
+        #endif
+}
 }
 
 void PlayerController::fade(int durationMs, int minVolume, int maxVolume) {
-    Serial.printf("  📉📈 %s - Fade requested: duration %d ms, min volume %d, max volume %d\n",
-                  __PRETTY_FUNCTION__, durationMs, minVolume, maxVolume);
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  📉📈 %s - Fade requested: duration %d ms, min volume %d, max volume %d\n",
+                      __PRETTY_FUNCTION__, durationMs, minVolume, maxVolume);
+    #endif
 
     if (fadeDirection == FadeDirection::NONE) {
         fadeStartTime = millis();
@@ -220,14 +263,18 @@ void PlayerController::fade(int durationMs, int minVolume, int maxVolume) {
         } else {
             // Current volume is already within the specified range
             fadeDirection = FadeDirection::NONE;
-            Serial.printf("  📈📉🚫 %s - No need to fade, current volume (%d) is already within range (%d-%d)\n",
-                          __PRETTY_FUNCTION__, currentVolume, minVolume, maxVolume);
-            return;
+            #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+                Serial.printf("  📈📉🚫 %s - No need to fade, current volume (%d) is already within range (%d-%d)\n",
+                              __PRETTY_FUNCTION__, currentVolume, minVolume, maxVolume);
+             #endif
+           return;
         }
 
-        Serial.printf("  🔉 %s - Current volume: %d, Target volume: %d, Direction: %s\n",
-                      __PRETTY_FUNCTION__, currentVolume, targetVolume,
-                      (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.printf("  🔉 %s - Current volume: %d, Target volume: %d, Direction: %s\n",
+                          __PRETTY_FUNCTION__, currentVolume, targetVolume,
+                          (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
+        #endif
 
         int volumeDifference = abs(targetVolume - currentVolume);
         fadeIntervalMs = constrain(durationMs / volumeDifference, 10, 500); // Interval between 10ms and 500ms
@@ -235,10 +282,14 @@ void PlayerController::fade(int durationMs, int minVolume, int maxVolume) {
 
         lastFadeTime = millis();
 
-        Serial.printf("  📈📉🔢 %s - Fade calculation: Volume step: %d, Fade interval: %d ms\n",
-                      __PRETTY_FUNCTION__, volumeStep, fadeIntervalMs);
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.printf("  📈📉🔢 %s - Fade calculation: Volume step: %d, Fade interval: %d ms\n",
+                          __PRETTY_FUNCTION__, volumeStep, fadeIntervalMs);
+        #endif
     } else {
-        Serial.printf("  📈📉🚫 %s - Fade already in progress, ignoring new fade request\n", __PRETTY_FUNCTION__);
+        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+            Serial.printf("  📈📉🚫 %s - Fade already in progress, ignoring new fade request\n", __PRETTY_FUNCTION__);
+        #endif
     }
 }
 
@@ -338,25 +389,23 @@ void PlayerController::displayPlayerStatusBox() {
             unsigned long long totalDuration = playDuration / 1000; // Convert to seconds
             unsigned long long remainingTime = (elapsedTime < totalDuration) ? (totalDuration - elapsedTime) : 0;
 
-            // Create progress bar
             const int barWidth = 26;
             int progress = 0;
             if (totalDuration > 0) { // Avoid division by zero
                 progress = (int)(((double)elapsedTime / totalDuration) * barWidth);
             }
             progress = constrain(progress, 0, barWidth); // Ensure progress is within bounds
-
-            char progressBar[barWidth + 1];
-            for (int i = 0; i < barWidth; i++) {
-                progressBar[i] = (i < progress) ? '=' : '-';
-            }
-            progressBar[barWidth] = '\0';
-
-            snprintf(progressStr, sizeof(progressStr), "[%s] %llu/%llu s", progressBar, elapsedTime, totalDuration);
+            int progressPercentage = (totalDuration > 0) ? (int)(((double)elapsedTime / totalDuration) * 100) : 0;
+            const char* progressBar = createProgressBar(progressPercentage, barWidth);
+            snprintf(progressStr, sizeof(progressStr), "%s %llu/%llu s", progressBar, elapsedTime, totalDuration);
             snprintf(remainingStr, sizeof(remainingStr), "%llu s", remainingTime);
 
             Serial.printf("    │ Progress:       %-38s|\n", progressStr);
             Serial.printf("    │ Remaining:      %-38s|\n", remainingStr);
+
+
+
+
         } else {
             unsigned long elapsedTime = (millis() - playStartTime) / 1000; // Convert to seconds
             char playbackStr[40];
@@ -382,15 +431,17 @@ void PlayerController::update() {
     static PlayerStatus lastPlayerStatus = STATUS_STOPPED;
 
     // Periodic update
-    if (currentTime - lastPeriodicUpdate >= DISPLAY_STATUS_UPDATE_INTERVAL) {
+    #if DISPLAY_PLAYER_STATUS_PERIODIC == true
+    if (currentTime - lastPeriodicUpdate >= PLAYER_STATUS_INTERVAL_MS) {
         lastPeriodicUpdate = currentTime;
         // displayEqualizerSettings();
       if (playerStatus != STATUS_STOPPED) {
         Serial.println(F("    ┌───────────────────────────────────────────────────────┐"));
-        Serial.printf("    | periodic update & status: %s\n", playerStatusToString(playerStatus) );
+           Serial.printf("    | Periodic Update (every %3d seconds)                   |\n", PLAYER_STATUS_INTERVAL_MS / 1000);
         displayPlayerStatusBox();
       }
     }
+    #endif
 
     // Check if sound is playing and duration is set
     if (playerStatus == STATUS_PLAYING && playDuration > 0) {
@@ -428,25 +479,31 @@ void PlayerController::update() {
         if (currentVolume == targetVolume) {
             fadeDirection = FadeDirection::NONE;
             unsigned long totalFadeTime = currentTime - fadeStartTime;
-            Serial.printf("                %s - Fade %s complete. Final volume: %d, Total fade time: %lu ms\n",
-                          __PRETTY_FUNCTION__,
-                          (fadeDirection == FadeDirection::IN) ? "in" : "out",
-                          currentVolume, totalFadeTime);
+            #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+                Serial.printf("                %s - Fade %s complete. Final volume: %d, Total fade time: %lu ms\n",
+                              __PRETTY_FUNCTION__,
+                              (fadeDirection == FadeDirection::IN) ? "in" : "out",
+                              currentVolume, totalFadeTime);
+            #endif
 
             // Check if we should stop the sound after fading
             if (shouldStopAfterFade) {
                 stopSound();
                 shouldStopAfterFade = false;
-                Serial.printf("                %s - Sound stopped after fade completion\n", __PRETTY_FUNCTION__);
+                #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+                    Serial.printf("                %s - Sound stopped after fade completion\n", __PRETTY_FUNCTION__);
+                #endif
             }
         }
     }
 
     // Check if player status has changed
+    #if DISPLAY_PLAYER_STATUS_ENABLED == true
     if (playerStatus != lastPlayerStatus) {
       Serial.println(F("    ┌───────────────────────────────────────────────────────┐"));
-         Serial.printf("    | status change from %s => %s\n", playerStatusToString(lastPlayerStatus), playerStatusToString(playerStatus));
+         Serial.printf("    | playerStatus change from %s => %s\n", playerStatusToString(lastPlayerStatus), playerStatusToString(playerStatus));
         displayPlayerStatusBox();
         lastPlayerStatus = playerStatus;
     }
+    #endif
 }

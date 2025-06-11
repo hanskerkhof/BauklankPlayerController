@@ -1,3 +1,4 @@
+#include "debug.h"
 
 // #define MD_PLAYER_ENABLED
 #define DY_PLAYER_ENABLED
@@ -8,28 +9,28 @@
 //using EqualizerPreset = PlayerController::EqualizerPreset;
 
 #ifdef MD_PLAYER_ENABLED
-  // #define MD_PLAYER_RX_PIN D1
-  // #define MD_PLAYER_TX_PIN D2
-  #define MD_PLAYER_RX_PIN 0 // green
-  #define MD_PLAYER_TX_PIN 2 // blue
-  // Include the specific class for the player controller
-  #include <MDPlayerController.h>
-  // Instantiate the MDPlayerController with the RX and TX pins
-  MDPlayerController player(MD_PLAYER_RX_PIN, MD_PLAYER_TX_PIN);
+// #define MD_PLAYER_RX_PIN D1
+// #define MD_PLAYER_TX_PIN D2
+#define MD_PLAYER_RX_PIN 0  // green
+#define MD_PLAYER_TX_PIN 2  // blue
+// Include the specific class for the player controller
+#include <MDPlayerController.h>
+// Instantiate the MDPlayerController with the RX and TX pins
+MDPlayerController player(MD_PLAYER_RX_PIN, MD_PLAYER_TX_PIN);
 #elif defined(DY_PLAYER_ENABLED)
-  // #define DY_PLAYER_RX_PIN D1
-  // #define DY_PLAYER_TX_PIN D2
-  #define DY_PLAYER_RX_PIN 0 // green
-  #define DY_PLAYER_TX_PIN 2 // blue
-  // Include the specific class for the player controller
-  #include <DYPlayerController.h>
-  // Instantiate the DYPlayerController with the RX and TX pins
-  DYPlayerController player(DY_PLAYER_RX_PIN, DY_PLAYER_TX_PIN);
+// #define DY_PLAYER_RX_PIN D1
+// #define DY_PLAYER_TX_PIN D2
+#define DY_PLAYER_RX_PIN 0  // green
+#define DY_PLAYER_TX_PIN 2  // blue
+// Include the specific class for the player controller
+#include <DYPlayerController.h>
+// Instantiate the DYPlayerController with the RX and TX pins
+DYPlayerController player(DY_PLAYER_RX_PIN, DY_PLAYER_TX_PIN);
 #elif defined(DF_PLAYER_ENABLED)
 // #define DF_PLAYER_RX_PIN D1
 // #define DF_PLAYER_TX_PIN D2
-#define DF_PLAYER_RX_PIN 0 // green
-#define DF_PLAYER_TX_PIN 2 // blue
+#define DF_PLAYER_RX_PIN 0  // green
+#define DF_PLAYER_TX_PIN 2  // blue
 // Include the specific class for the player controller
 #include <DFRobotPlayerController.h>
 // Instantiate the DFRobotPlayerController with the RX and TX pins
@@ -37,7 +38,7 @@ DFRobotPlayerController player(DF_PLAYER_RX_PIN, DF_PLAYER_TX_PIN);
 #endif
 
 int soundIndex = 1;
-const int MIN_SOUND_INDEX  = 1;
+const int MIN_SOUND_INDEX = 1;
 const int MAX_SOUND_INDEX = 10;
 uint8_t playerVolume = 22;
 // Define minutes and seconds for the duration of the track
@@ -89,7 +90,12 @@ void setup() {
   // Set the volume
   player.setVolume(playerVolume);
 
-  delay(1000); // add a delay for clarity to see what is happening
+  delay(1000);  // add a delay for clarity to see what is happening
+
+  // Start the first sound play
+  player.playSound(soundIndex, trackDurationMs, trackName);
+
+  delay(1000);  // add a delay for clarity to see what is happening
 
   Serial.println(F("--------------------------------------------------------------------------------------------"));
 }
@@ -101,18 +107,16 @@ void loop() {
 
   // Sound playing logic
   if (!player.isSoundPlaying()) {
+    incrementSoundIndex();
 
     Serial.printf("🔇 [%s] Not playing\n", __PRETTY_FUNCTION__);
     Serial.printf("▶️ [%s] Play sound index: %d, duration: %d ms\n", __PRETTY_FUNCTION__, soundIndex, trackDurationMs);
     player.playSound(soundIndex, trackDurationMs, trackName);
-
-//    incrementSoundIndex();
-      delay(20);  // wait a bit so we are sure that the sound has started
   }
 
-//  if (_plan_currentMillis > _plan_targetNextMessageTime) {
-//    _plan_tickCount++;
-//    _plan_targetNextMessageTime = _plan_currentMillis + PLAN_TARGET_NEXT_MESSAGE_TIME_INTERVAL_MS;
-//    Serial.printf("plan_update() :: _plan_currentMillis: %d, _plan_targetNextMessageTime: %d, _plan_tickCount: %d\n", _plan_currentMillis, _plan_targetNextMessageTime, _plan_tickCount);
-//  }  // Interval
+  //  if (_plan_currentMillis > _plan_targetNextMessageTime) {
+  //    _plan_tickCount++;
+  //    _plan_targetNextMessageTime = _plan_currentMillis + PLAN_TARGET_NEXT_MESSAGE_TIME_INTERVAL_MS;
+  //    Serial.printf("plan_update() :: _plan_currentMillis: %d, _plan_targetNextMessageTime: %d, _plan_tickCount: %d\n", _plan_currentMillis, _plan_targetNextMessageTime, _plan_tickCount);
+  //  }  // Interval
 }  // Loop
