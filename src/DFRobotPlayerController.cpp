@@ -40,37 +40,38 @@ void DFRobotPlayerController::begin() {
 }
 
 void DFRobotPlayerController::playSound(int track) {
-  // Call base class first for setting status
-  PlayerController::playSound(track);
-
   int _folder = ((track - 1) / 255) + 1;
   int _track = ((track - 1) % 255) + 1;
-  Serial.printf("  %s - myDFPlayer.playFolder(%d, %d)\n",  __PRETTY_FUNCTION__, _folder, _track);
+  Serial.printf("  ▶️ %s - myDFPlayer.playFolder(%d, %d)\n",  __PRETTY_FUNCTION__, _folder, _track);
   myDFPlayer.playFolder(_folder, _track);
-  delay(20);
+  //  delay(20);
 
+  // Call base class for status
+  PlayerController::playSound(track);
 }
 
 void DFRobotPlayerController::playSound(int track, unsigned long durationMs) {
-    // Call base class first for setting status and timing
+    // Call base class for status and duration
     PlayerController::playSound(track, durationMs);
 
     playSound(track);
-
 }
 
 void DFRobotPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
-    // Call the base class implementation
+    // Call the base class for status, duration and trackName
     PlayerController::playSound(track, durationMs, trackName);
 
     // Then call playsound with the 2 parameters
-    playSound(track, durationMs);
+    // playSound(track, durationMs);
+    playSound(track);
 }
 
 void DFRobotPlayerController::stopSound() {
+    Serial.printf("  ⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
     myDFPlayer.stop();
-    playerStatus = STATUS_STOPPED;
-    delay(20);
+
+    // Call base class for status
+    PlayerController::stopSound();
 }
 
 void DFRobotPlayerController::setPlayerVolume(uint8_t _playerVolume) {
@@ -117,7 +118,10 @@ void DFRobotPlayerController::setEqualizerPreset(EqualizerPreset preset) {
             myDFPlayer.EQ(DFPLAYER_EQ_BASS);
             break;
     }
-    delay(20);}
+    delay(20);
+    // call base class for status
+    PlayerController::setEqualizerPreset(preset);
+}
 
 void DFRobotPlayerController::update() {
     PlayerController::update(); // Call the base class update method

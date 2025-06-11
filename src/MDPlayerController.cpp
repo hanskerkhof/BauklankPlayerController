@@ -39,40 +39,35 @@ void MDPlayerController::disableLoop() {
 }
 
 void MDPlayerController::playSound(int track) {
-  // Call base class first for setting status
-  PlayerController::playSound(track);
-
-  Serial.printf("  %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
+  Serial.printf("  ▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
   uint16_t trackNumber = track;
   uint8_t _folder, _track;
   decodeFolderAndTrack(trackNumber, _folder, _track);
   uint16_t parameter = (_folder << 8) | _track;
   mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
+  // Call base class for setting status
+  PlayerController::playSound(track);
 }
 
 void MDPlayerController::playSound(int track, unsigned long durationMs) {
-    // Call base class first for setting status and timing
-    PlayerController::playSound(track, durationMs);
-
     playSound(track);
+
+    // Call base class for setting status and duration
+    PlayerController::playSound(track, durationMs);
 }
 
 void MDPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
-    // Call the base class implementation
-    PlayerController::playSound(track, durationMs, trackName);
-
-    // Then call playsound with the 2 parameters
     playSound(track, durationMs);
+    // Call base class for setting status, duration and trackName
+    PlayerController::playSound(track, durationMs, trackName);
 }
 
 void MDPlayerController::stopSound() {
-//    Serial.printf("🛑 [%s] Stopping sound\n", __PRETTY_FUNCTION__);
-//    Serial.printf("  Current player status: %s\n", playerStatusToString(playerStatus));
+    Serial.printf("  ⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
     mdPlayerCommand(CMD::STOP_PLAY, 0);
-    playerStatus = STATUS_STOPPED;
-//    Serial.printf("  Command sent: STOP_PLAY\n");
-    Serial.printf("  New player status: %s\n", playerStatusToString(playerStatus));
-//    Serial.println("  Sound stopped successfully");
+
+    // Call base class for setting status
+    PlayerController::stopSound();
 }
 
 void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) {
@@ -132,6 +127,8 @@ void MDPlayerController::setEqualizerPreset(EqualizerPreset preset) {
 
     mdPlayerCommand(SET_EQUALIZER, mdPreset);
     Serial.printf("MDPlayer: Set equalizer preset to %d\n", static_cast<int>(preset));
+    // call base class for status
+    PlayerController::setEqualizerPreset(preset);
 }
 
 void MDPlayerController::update() {

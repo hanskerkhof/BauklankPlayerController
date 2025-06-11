@@ -28,36 +28,39 @@ void DYPlayerController::begin() {
 }
 
 void DYPlayerController::playSound(int track) {
-    // Call base class first for setting status
-    PlayerController::playSound(track);
-
-    Serial.printf("  %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
+    Serial.printf("▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
     char path[11];
     sprintf(path, "/%05d.mp3", track);
-    Serial.printf("      Playing track: %d, path: %s\n", track, path);
-    Serial.printf("      myDYPlayer.playSpecifiedDevicePath(%s)\n", path);
+    Serial.printf("     Playing track: %d, path: %s\n", track, path);
+    Serial.printf("     myDYPlayer.playSpecifiedDevicePath(%s)\n", path);
     myDYPlayer.playSpecifiedDevicePath(DY::Device::Sd, path);
 
+    // Call base class for status
+    PlayerController::playSound(track);
 }
 
 void DYPlayerController::playSound(int track, unsigned long durationMs) {
-    // Call base class first for setting status and timing
+    // Call base class for status and duration
     PlayerController::playSound(track, durationMs);
 
     playSound(track);
 }
 
 void DYPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
-    // Call the base class implementation
+    // Call the base class for status, duration and trackName
     PlayerController::playSound(track, durationMs, trackName);
 
     // Then call playsound with the 2 parameters
-    playSound(track, durationMs);
+    // playSound(track, durationMs);
+    playSound(track);
 }
 
 void DYPlayerController::stopSound() {
+    Serial.printf("⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
     myDYPlayer.stop();
-    playerStatus = STATUS_STOPPED;
+
+    // Call base class for status
+    PlayerController::stopSound();
 }
 
 void DYPlayerController::setPlayerVolume(uint8_t playerVolume) {
@@ -107,6 +110,8 @@ void DYPlayerController::setEqualizerPreset(EqualizerPreset preset) {
     }
     myDYPlayer.setEq(dyPreset);
     Serial.printf("DYPlayer: Set equalizer preset to %d\n", static_cast<int>(preset));
+    // call base class for status
+    PlayerController::setEqualizerPreset(preset);
 }
 
 void DYPlayerController::update() {

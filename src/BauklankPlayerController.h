@@ -49,7 +49,6 @@ public:
 // EQ_JAZZ
 // EQ_CLASSIC
 // EQ_BASS
-// TODO create enum for equalizer presets
 
     enum class EqualizerPreset : uint8_t {
         NORMAL = 0,
@@ -63,8 +62,8 @@ public:
     // Helpers
     const char* playerStatusToString(PlayerStatus status) {
         switch (status) {
-            case STATUS_STOPPED: return "STATUS_STOPPED";
-            case STATUS_PLAYING: return "STATUS_PLAYING";
+            case STATUS_STOPPED: return "STOPPED";
+            case STATUS_PLAYING: return "PLAYING";
             default: return "UNKNOWN_STATUS";
         }
     }
@@ -86,19 +85,27 @@ public:
     virtual void playSound(int track);
     virtual void playSound(int track, unsigned long durationMs);
     virtual void playSound(int track, unsigned long durationMs, const char* trackName);
+    virtual void stopSound() = 0;
 
     virtual void enableLoop() = 0;
     virtual void disableLoop() = 0;
 
     virtual void setEqualizerPreset(EqualizerPreset preset) = 0;
+    static const char* equalizerPresetToString(EqualizerPreset preset);
 
     void displayPlayerStatusBox();
+    void displayVolumeProgressBar();
+    void displayEqualizerSettings();
+
     void playSoundRandom(int minTrack, int maxTrack);
     void update();
     bool isSoundPlaying() const { return playerStatus == STATUS_PLAYING; }
-    virtual void stopSound() = 0;
+    const char* createProgressBar(int value, int maxLength);
+
 
 protected:
+    static const uint8_t MIN_VOLUME = 0;
+    static const uint8_t MAX_VOLUME = 30;
     bool isLooping = false;
 //    int lastPlayedTrack = -1;  // Add this line
 
@@ -118,8 +125,6 @@ protected:
     int volumeStep;
 
     void decodeFolderAndTrack(uint16_t trackNumber, uint8_t& folder, uint8_t& track);
-    static const uint8_t MIN_VOLUME = 0;
-    static const uint8_t MAX_VOLUME = 30;
     static const int DEFAULT_FADE_INTERVAL_MS = 80;
     int fadeIntervalMs = DEFAULT_FADE_INTERVAL_MS;
     bool shouldStopAfterFade = false;
@@ -128,6 +133,11 @@ private:
     unsigned long fadeStartTime;
     int currentTrack;
     const char* currentTrackName;
+
+    EqualizerPreset currentEqualizerPreset = EqualizerPreset::NORMAL;
+    int bassLevel = 50;  // Example default value
+    int midLevel = 50;   // Example default value
+    int trebleLevel = 50; // Example default value
 };
 
 #endif // PLAYER_CONTROLLER_H

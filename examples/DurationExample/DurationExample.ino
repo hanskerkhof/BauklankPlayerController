@@ -5,6 +5,7 @@
 
 // Include the base class for the player controller
 #include <BauklankPlayerController.h>
+//using EqualizerPreset = PlayerController::EqualizerPreset;
 
 #ifdef MD_PLAYER_ENABLED
   // #define MD_PLAYER_RX_PIN D1
@@ -38,7 +39,7 @@ DFRobotPlayerController player(DF_PLAYER_RX_PIN, DF_PLAYER_TX_PIN);
 int soundIndex = 1;
 const int MIN_SOUND_INDEX  = 1;
 const int MAX_SOUND_INDEX = 10;
-uint8_t playerVolume = 30;
+uint8_t playerVolume = 22;
 // Define minutes and seconds for the duration of the track
 const uint8_t minutes = 0;
 const uint8_t seconds = 20;
@@ -75,11 +76,21 @@ void setup() {
   Serial.println(F("--------------------------------------------------------------------------------------------"));
   Serial.println(F("Start the player..."));
   Serial.println(F("--------------------------------------------------------------------------------------------"));
-  updateTrackName();  // Initialize trackName
-  // Start the player
-  player.begin();
-  player.setVolume(30);
+
+  // Initialize trackName
+  updateTrackName();
+
+  // Initialize my player
+ player.begin();
+
+  // Set the equalizer preset
+  player.setEqualizerPreset(PlayerController::EqualizerPreset::ROCK);
+
+  // Set the volume
+  player.setVolume(playerVolume);
+
   delay(1000); // add a delay for clarity to see what is happening
+
   Serial.println(F("--------------------------------------------------------------------------------------------"));
 }
 
