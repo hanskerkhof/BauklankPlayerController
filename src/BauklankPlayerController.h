@@ -8,12 +8,12 @@
 
 #ifndef BAUKLANK_PLAYER_CONTROLLER_DEBUG
 // Enable debug output for this class.
-#define BAUKLANK_PLAYER_CONTROLLER_DEBUG true
+#define BAUKLANK_PLAYER_CONTROLLER_DEBUG false
 #endif
 
 #ifndef DISPLAY_PLAYER_STATUS_ENABLED
 // Display player status on a player state change.
-#define DISPLAY_PLAYER_STATUS_ENABLED true
+#define DISPLAY_PLAYER_STATUS_ENABLED false
 #endif
 
 #ifndef DISPLAY_PLAYER_STATUS_PERIODIC
@@ -93,18 +93,20 @@ public:
     virtual void setVolume(int volume);
     int getVolume();
 
-    virtual void fadeIn(int durationMs, int targetVolume = 30);
-    virtual void fadeIn(int durationMs, int targetVolume, int playTrack);
-    virtual void fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs);
+//    virtual void fadeIn(int durationMs, int targetVolume = 30);
+//    virtual void fadeIn(int durationMs, int targetVolume, int playTrack);
+//    virtual void fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs);
 
-    virtual void fadeOut(int durationMs, int targetVolume = 0);
-    virtual void fadeOut(int durationMs, int targetVolume, bool stopSound);
-    virtual void fade(int durationMs, int minVolume, int maxVolume);
+//    virtual void fadeOut(int durationMs, int targetVolume = 0);
+//    virtual void fadeOut(int durationMs, int targetVolume, bool stopSound);
+//    virtual void fade(int durationMs, int minVolume, int maxVolume);
 
-    virtual void playSound(int track);
-    virtual void playSound(int track, unsigned long durationMs);
-    virtual void playSound(int track, unsigned long durationMs, const char* trackName);
-    virtual void stopSound() = 0;
+//    virtual void playSound(int track);
+//    virtual void playSound(int track, unsigned long durationMs);
+//    virtual void playSound(int track, unsigned long durationMs, const char* trackName);
+    virtual void playSoundSetStatus(int track, unsigned long durationMs, const char* trackName);
+    virtual void stopSoundSetStatus();
+    virtual void stopSound();
 
     virtual void enableLoop() = 0;
     virtual void disableLoop() = 0;
@@ -116,7 +118,7 @@ public:
     void displayVolumeProgressBar();
     void displayEqualizerSettings();
 
-    void playSoundRandom(int minTrack, int maxTrack);
+//    void playSoundRandom(int minTrack, int maxTrack);
     void update();
     bool isSoundPlaying() const { return playerStatus == STATUS_PLAYING; }
     const char* createProgressBar(int value, int maxLength);

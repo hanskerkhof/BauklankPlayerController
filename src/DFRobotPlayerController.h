@@ -19,15 +19,16 @@ public:
     const char* getPlayerTypeName() const override { return "DF Player"; }
     DFRobotPlayerController(int rxPin, int txPin);
     void begin() override;
-    void playSound(int track) override;
-    void playSound(int track, unsigned long durationMs) override;
-    void playSound(int track, unsigned long durationMs, const char* trackName) override;
-    void stopSound() override;
+//    void playSound(int track) override;
+//    void playSound(int track, unsigned long durationMs) override;
+//    void playSound(int track, unsigned long durationMs, const char* trackName) override;
+    void playSound(int track, unsigned long durationMs, const char* trackName);
+    void stopSound();
     void enableLoop() override;
     void disableLoop() override;
     void setEqualizerPreset(EqualizerPreset preset) override;
     void update();
-    using PlayerController::playSoundRandom;
+//    using PlayerController::playSoundRandom;
 
 protected:
     void setPlayerVolume(uint8_t playerVolume) override;

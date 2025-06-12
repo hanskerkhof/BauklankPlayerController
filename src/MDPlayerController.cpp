@@ -46,30 +46,40 @@ void MDPlayerController::disableLoop() {
     isLooping = false;
 }
 
-void MDPlayerController::playSound(int track) {
-    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-        Serial.printf("  ▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
-    #endif
+//void MDPlayerController::playSound(int track) {
+//    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+//        Serial.printf("  ▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
+//    #endif
+//    uint16_t trackNumber = track;
+//    uint8_t _folder, _track;
+//    decodeFolderAndTrack(trackNumber, _folder, _track);
+//    uint16_t parameter = (_folder << 8) | _track;
+//    mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
+//    // Call base class for setting status
+//    PlayerController::playSound(track);
+//}
+
+//void MDPlayerController::playSound(int track, unsigned long durationMs) {
+//    playSound(track);
+//
+//    // Call base class for setting status and duration
+//    PlayerController::playSound(track, durationMs);
+//}
+
+void MDPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
     uint16_t trackNumber = track;
     uint8_t _folder, _track;
     decodeFolderAndTrack(trackNumber, _folder, _track);
     uint16_t parameter = (_folder << 8) | _track;
+
+    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  ▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
+    #endif
     mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
-    // Call base class for setting status
-    PlayerController::playSound(track);
-}
 
-void MDPlayerController::playSound(int track, unsigned long durationMs) {
-    playSound(track);
-
-    // Call base class for setting status and duration
-    PlayerController::playSound(track, durationMs);
-}
-
-void MDPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
-    playSound(track, durationMs);
     // Call base class for setting status, duration and trackName
-    PlayerController::playSound(track, durationMs, trackName);
+    PlayerController::playSoundSetStatus(track, durationMs, trackName);
+//    playSound(track, durationMs);
 }
 
 void MDPlayerController::stopSound() {
@@ -79,7 +89,7 @@ void MDPlayerController::stopSound() {
     mdPlayerCommand(CMD::STOP_PLAY, 0);
 
     // Call base class for setting status
-    PlayerController::stopSound();
+    PlayerController::stopSoundSetStatus();
 }
 
 void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) {

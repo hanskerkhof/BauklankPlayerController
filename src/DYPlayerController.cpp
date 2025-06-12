@@ -36,36 +36,37 @@ void DYPlayerController::begin() {
     delay(slp);
 }
 
-void DYPlayerController::playSound(int track) {
-    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-        Serial.printf("▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
-    #endif
-    char path[11];
-    sprintf(path, "/%05d.mp3", track);
-    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-       Serial.printf("     Playing track: %d, path: %s\n", track, path);
-        Serial.printf("     myDYPlayer.playSpecifiedDevicePath(%s)\n", path);
-    #endif
-    myDYPlayer.playSpecifiedDevicePath(DY::Device::Sd, path);
+//void DYPlayerController::playSound(int track) {
+////    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+//        Serial.printf("▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
+////    #endif
+//    char path[11];
+//    sprintf(path, "/%05d.mp3", track);
+//    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+//       Serial.printf("     Playing track: %d, path: %s\n", track, path);
+//        Serial.printf("     myDYPlayer.playSpecifiedDevicePath(%s)\n", path);
+//    #endif
+//    // Call base class for status
+//    PlayerController::playSound(track, 0, "");
+//    // Play on the device
+//}
 
-    // Call base class for status
-    PlayerController::playSound(track);
-}
-
-void DYPlayerController::playSound(int track, unsigned long durationMs) {
-    // Call base class for status and duration
-    PlayerController::playSound(track, durationMs);
-
-    playSound(track);
-}
+//void DYPlayerController::playSound(int track, unsigned long durationMs) {
+////    // Call base class for status and durationMs
+////    PlayerController::playSound(track, durationMs, "");
+//
+//    DYPlayerController::playSound(track);
+//}
 
 void DYPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
-    // Call the base class for status, duration and trackName
-    PlayerController::playSound(track, durationMs, trackName);
 
-    // Then call playsound with the 2 parameters
-    // playSound(track, durationMs);
-    playSound(track);
+    // Create the path for the track
+    char path[11];
+    sprintf(path, "/%05d.mp3", track);
+
+    myDYPlayer.playSpecifiedDevicePath(DY::Device::Sd, path);
+    // Call the base class for status, duration and trackName
+    PlayerController::playSoundSetStatus(track, durationMs, trackName);
 }
 
 void DYPlayerController::stopSound() {
@@ -75,7 +76,7 @@ void DYPlayerController::stopSound() {
     myDYPlayer.stop();
 
     // Call base class for status
-    PlayerController::stopSound();
+    PlayerController::stopSoundSetStatus();
 }
 
 void DYPlayerController::setPlayerVolume(uint8_t playerVolume) {
