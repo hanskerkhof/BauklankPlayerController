@@ -25,16 +25,21 @@
 
 class PlayerController {
 public:
+    static const uint8_t MIN_VOLUME = 0;
+    static const uint8_t MAX_VOLUME = 30;
+//    static const int DEFAULT_VOLUME = 24;
+    static const int MIN_FADE_DURATION_MS = 1400;  // Add this line
+
     enum PlayerStatus {
         STATUS_STOPPED,
         STATUS_PLAYING
     };
 
-  enum class FadeDirection {
-      NONE,
-      IN,
-      OUT
-  };
+    enum class FadeDirection {
+        NONE,
+        IN,
+        OUT
+    };
 
 //| const             | value  |
 //| :---------------- | :----- |
@@ -93,17 +98,12 @@ public:
     virtual void setVolume(int volume);
     int getVolume();
 
-//    virtual void fadeIn(int durationMs, int targetVolume = 30);
-//    virtual void fadeIn(int durationMs, int targetVolume, int playTrack);
-//    virtual void fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs);
+    virtual void fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs, const char* trackName);
+    virtual void fadeOut(int durationMs, int targetVolume, bool stopSound);
+    virtual void fadeTo(int durationMs,int targetVolume);
 
-//    virtual void fadeOut(int durationMs, int targetVolume = 0);
-//    virtual void fadeOut(int durationMs, int targetVolume, bool stopSound);
-//    virtual void fade(int durationMs, int minVolume, int maxVolume);
+    virtual void playSound(int track, unsigned long durationMs, const char* trackName);
 
-//    virtual void playSound(int track);
-//    virtual void playSound(int track, unsigned long durationMs);
-//    virtual void playSound(int track, unsigned long durationMs, const char* trackName);
     virtual void playSoundSetStatus(int track, unsigned long durationMs, const char* trackName);
     virtual void stopSoundSetStatus();
     virtual void stopSound();
@@ -125,8 +125,6 @@ public:
 
 
 protected:
-    static const uint8_t MIN_VOLUME = 0;
-    static const uint8_t MAX_VOLUME = 30;
     bool isLooping = false;
 //    int lastPlayedTrack = -1;  // Add this line
 

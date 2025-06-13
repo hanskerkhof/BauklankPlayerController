@@ -72,13 +72,14 @@ void MDPlayerController::playSound(int track, unsigned long durationMs, const ch
     decodeFolderAndTrack(trackNumber, _folder, _track);
     uint16_t parameter = (_folder << 8) | _track;
 
-    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-        Serial.printf("  ▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
-    #endif
-    mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
-
     // Call base class for setting status, duration and trackName
     PlayerController::playSoundSetStatus(track, durationMs, trackName);
+
+//    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  ▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
+//    #endif
+    mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
+
 //    playSound(track, durationMs);
 }
 
@@ -93,6 +94,7 @@ void MDPlayerController::stopSound() {
 }
 
 void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) {
+    //    unsigned long startTime = millis();  // Start timing
     delay(20);
     int8_t frame[8] = { 0 };
     frame[0] = 0x7e;                // starting byte
@@ -109,18 +111,44 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
         mySoftwareSerial.write(frame[i]);
     }
     delay(20);
+    //    unsigned long endTime = millis();  // End timing
+    //    unsigned long duration = endTime - startTime;  // Calculate duration
+    //    // Print the duration
+    //    Serial.printf("mdPlayerCommand execution time: %lu ms\n", duration);
 }
 
-void MDPlayerController::setPlayerVolume(uint8_t playerVolume) {
+
+/**
+ * @brief Sets the volume of the MD Player.
+ *
+ * This method sets the volume of the MD Player to the specified level. It checks if the new volume
+ * is different from the last set volume to avoid unnecessary commands.
+ *
+ * @param playerVolume The volume level to set. Should be a value between 0 (mute) and 30 (max volume).
+ *
+ * @details
+ * - If the new volume is different from the last set volume:
+ *   - It sends a SET_VOLUME command to the MD Player with the new volume.
+ *   - Updates the lastSetPlayerVolume to the new value.
+ *   - If debug is enabled, it logs the volume change.
+ * - If the new volume is the same as the last set volume:
+ *   - It does nothing to avoid unnecessary commands.
+ *   - If debug is enabled, it logs that the volume was already set to this value.
+ *
+ * @note This method uses the mdPlayerCommand function to send the SET_VOLUME command to the player.
+ *
+ * @see mdPlayerCommand
+ */
+ void MDPlayerController::setPlayerVolume(uint8_t playerVolume) {
     if (playerVolume != lastSetPlayerVolume) {
         mdPlayerCommand(SET_VOLUME, playerVolume);
         lastSetPlayerVolume = playerVolume;
         #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-//        Serial.printf("%s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
+            Serial.printf("%s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
         #endif
     } else {
         #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-//         Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
+          Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
         #endif
     }
 }

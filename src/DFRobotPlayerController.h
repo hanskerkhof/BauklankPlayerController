@@ -21,8 +21,8 @@ public:
     void begin() override;
 //    void playSound(int track) override;
 //    void playSound(int track, unsigned long durationMs) override;
-//    void playSound(int track, unsigned long durationMs, const char* trackName) override;
-    void playSound(int track, unsigned long durationMs, const char* trackName);
+    void playSound(int track, unsigned long durationMs, const char* trackName) override;
+//    void playSound(int track, unsigned long durationMs, const char* trackName);
     void stopSound();
     void enableLoop() override;
     void disableLoop() override;

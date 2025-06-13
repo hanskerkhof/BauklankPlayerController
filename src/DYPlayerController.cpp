@@ -84,11 +84,11 @@ void DYPlayerController::setPlayerVolume(uint8_t playerVolume) {
         myDYPlayer.setVolume(playerVolume);
         lastSetPlayerVolume = playerVolume;
         #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-        //      Serial.printf("%s - Set DY Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
+          Serial.printf("%s - Set DY Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
         #endif
     } else {
         #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-        //       Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
+           Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
         #endif
     }
 }

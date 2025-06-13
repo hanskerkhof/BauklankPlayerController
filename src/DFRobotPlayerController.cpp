@@ -91,11 +91,11 @@ void DFRobotPlayerController::setPlayerVolume(uint8_t _playerVolume) {
         myDFPlayer.volume(_playerVolume);
         lastSetPlayerVolume = _playerVolume;
         #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-//        Serial.printf("%s - Set DF Player volume to %d\n", __PRETTY_FUNCTION__, _playerVolume);
+            Serial.printf("%s - Set DF Player volume to %d\n", __PRETTY_FUNCTION__, _playerVolume);
         #endif
     } else {
         #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-//         Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, _playerVolume);
+            Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, _playerVolume);
         #endif
     }
     delay(20);
