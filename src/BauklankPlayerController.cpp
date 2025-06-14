@@ -512,10 +512,9 @@ void PlayerController::update() {
 
         if (newVolume != currentVolume) {
             // Log the volume change for debugging
-           Serial.printf("  FADE - Changing volume from %d to %d (Target: %d, Direction: %s)\n",
-                          currentVolume, newVolume, targetVolume,
-                          fadeDirection == FadeDirection::IN ? "IN" : "OUT");
-//            Serial.printf("  FADE - Changing volume from %d to %d\n", currentVolume, newVolume);
+//           Serial.printf("  FADE - Changing volume from %d to %d (Target: %d, Direction: %s)\n",
+//                          currentVolume, newVolume, targetVolume,
+//                          fadeDirection == FadeDirection::IN ? "IN" : "OUT");
             setVolume(newVolume);
             currentVolume = newVolume;
         }

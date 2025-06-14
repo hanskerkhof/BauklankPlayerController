@@ -1,42 +1,42 @@
 #include "DFRobotPlayerController.h"
+#include <Arduino.h>
 // MAKE SURE YOU ARE USING VERSION 1.0.5 OF THE DFRobotDFPlayerMini LIBRARY!!
 #include "DFRobotDFPlayerMini.h"
-#include <Arduino.h>
+
 
 DFRobotPlayerController::DFRobotPlayerController(int rxPin, int txPin)
     : mySoftwareSerial(rxPin, txPin) {
-    // Select TF card in the constructor???
 }
 
 void DFRobotPlayerController::begin() {
     mySoftwareSerial.begin(9600);
     delay(300);  // Give some time for the serial connection to establish
 
-    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+//    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
         Serial.println(F("  SETUP - DFRobot DFPlayer Mini"));
         Serial.println(F("  SETUP - Initializing DFPlayer ... (May take 3~5 seconds)"));
         // This comment saved me!!!
         // https://github.com/DFRobot/DFRobotDFPlayerMini/issues/9#issuecomment-514548776
         Serial.println(F("  DFPlayer SetTimeOut(1000)"));
-    #endif
+//    #endif
     myDFPlayer.setTimeOut(1000);  //Set serial communication time out to 1000ms
     delay(30);
 
     // if (!myDFPlayer.begin(mySoftwareSerial, /*isACK = */true, /*doReset = */false)) {  //Use serial to communicate with mp3.
 //    if (!myDFPlayer.begin(mySoftwareSerial, /*isACK = */false, /*doReset = */true)) {  //Use serial to communicate with mp3.
     if (!myDFPlayer.begin(mySoftwareSerial, /*isACK = */true, /*doReset = */false)) {
-        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+//        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
             Serial.println(F("  SETUP - Unable to begin:"));
             Serial.println(F("          1.Please recheck the connection!"));
             Serial.println(F("          2.Please insert the SD card!"));
-        #endif
+//        #endif
         while(true){
             delay(0); // Code to compatible with ESP8266 watch dog.
           }
         }
-        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+//        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
             Serial.println(F("  SETUP - DFPlayer Mini connected."));
-        #endif
+//        #endif
     }
 
 //void DFRobotPlayerController::playSound(int track) {
@@ -102,15 +102,15 @@ void DFRobotPlayerController::setPlayerVolume(uint8_t _playerVolume) {
 }
 
 void DFRobotPlayerController::enableLoop() {
-    loopEnabled = true;
-    myDFPlayer.enableLoop();
-    delay(20);
+//    loopEnabled = true;
+//    myDFPlayer.enableLoop();
+//    delay(20);
 }
 
 void DFRobotPlayerController::disableLoop() {
-    loopEnabled = false;
-    myDFPlayer.disableLoop();
-    delay(20);
+//    loopEnabled = false;
+//    myDFPlayer.disableLoop();
+//    delay(20);
 }
 
 void DFRobotPlayerController::setEqualizerPreset(EqualizerPreset preset) {

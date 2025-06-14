@@ -5,7 +5,7 @@
 #include "BauklankPlayerController.h"
 #include <SoftwareSerial.h>
 // MAKE SURE YOU ARE USING VERSION 1.0.5 OF THE DFRobotDFPlayerMini LIBRARY!!
-#include <DFRobotDFPlayerMini.h> // Include the DFRobot library
+#include <DFRobotDFPlayerMini.h> // https://github.com/DFRobot/DFRobotDFPlayerMini
 
 class DFRobotPlayerController : public PlayerController {
 private:
@@ -13,14 +13,12 @@ private:
     DFRobotDFPlayerMini myDFPlayer;
     uint8_t lastSetPlayerVolume = -1;  // Initialize to an invalid value
     uint8_t currentVolume; // To keep track of the current volume
-    bool loopEnabled = false;
-
+    bool isLooping = false;
 public:
-    const char* getPlayerTypeName() const override { return "DF Player"; }
     DFRobotPlayerController(int rxPin, int txPin);
+
+    const char* getPlayerTypeName() const override { return "DF Player"; }
     void begin() override;
-//    void playSound(int track) override;
-//    void playSound(int track, unsigned long durationMs) override;
     void playSound(int track, unsigned long durationMs, const char* trackName) override;
 //    void playSound(int track, unsigned long durationMs, const char* trackName);
     void stopSound();
@@ -28,8 +26,6 @@ public:
     void disableLoop() override;
     void setEqualizerPreset(EqualizerPreset preset) override;
     void update();
-//    using PlayerController::playSoundRandom;
-
 protected:
     void setPlayerVolume(uint8_t playerVolume) override;
 };
