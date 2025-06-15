@@ -79,6 +79,7 @@ void DFRobotPlayerController::playSound(int track, unsigned long durationMs, con
 void DFRobotPlayerController::stopSound() {
     #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
         Serial.printf("  ⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
+        Serial.println("      %s - myDFPlayer.stop()\n", __PRETTY_FUNCTION__);
     #endif
     myDFPlayer.stop();
 

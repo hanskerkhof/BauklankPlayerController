@@ -250,6 +250,7 @@ void PlayerController::fadeOut(int durationMs, int targetVolume = 0, bool stopSo
     shouldStopAfterFade = stopSound;
 
 //    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+        Serial.printf("  📉 %s - should stop after fade: %s\n", __PRETTY_FUNCTION__, shouldStopAfterFade? "true" : "false"  );
         Serial.printf("  📉 %s - Fade out requested: duration %d ms, target volume %d\n", __PRETTY_FUNCTION__, durationMs, targetVolume);
 //    #endif
 
@@ -521,10 +522,22 @@ void PlayerController::update() {
 
         // Check if fade is complete
         if (currentVolume == targetVolume) {
+            // Check if we need to stop the sound before resetting fadeDirection
+            if (fadeDirection == FadeDirection::OUT && shouldStopAfterFade) {
+                Serial.println("  FADE - Stopping sound after fade out");
+                stopSound();
+                shouldStopAfterFade = false; // Reset the flag
+            }
+
+            // Now set fadeDirection to NONE
+            FadeDirection previousFadeDirection = fadeDirection;
+            fadeDirection = FadeDirection::NONE;
+
             fadeDirection = FadeDirection::NONE;
             unsigned long totalFadeTime = currentTime - fadeStartTime;
             Serial.printf("  FADE - Fade complete. Final volume: %d, Total fade time: %lu ms\n",
                           currentVolume, totalFadeTime);
+
         }
     }
 

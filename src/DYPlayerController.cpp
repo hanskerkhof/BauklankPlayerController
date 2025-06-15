@@ -73,9 +73,10 @@ void DYPlayerController::playSound(int track, unsigned long durationMs, const ch
 }
 
 void DYPlayerController::stopSound() {
-    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+//    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
         Serial.printf("⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
-    #endif
+        Serial.printf("      %s - myDYPlayer.stop()\n", __PRETTY_FUNCTION__);
+//    #endif
     myDYPlayer.stop();
 
     // Call base class for status

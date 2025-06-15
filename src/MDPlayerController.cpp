@@ -86,6 +86,7 @@ void MDPlayerController::playSound(int track, unsigned long durationMs, const ch
 void MDPlayerController::stopSound() {
     #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
         Serial.printf("  ⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
+        Serial.println("      %s - mdPlayerCommand(CMD::STOP_PLAY, 0)\n", __PRETTY_FUNCTION__);
     #endif
     mdPlayerCommand(CMD::STOP_PLAY, 0);
 
