@@ -33,7 +33,7 @@ unsigned long PLAYER_STATUS_INTERVAL_MS = 5000;
 void PlayerController::setVolume(int _volume) {
     currentVolume = constrain(_volume, MIN_VOLUME, MAX_VOLUME);
     setPlayerVolume(currentVolume);
-//    displayPlayerStatusBox();
+    // displayPlayerStatusBox();
 }
 
 /**
@@ -392,6 +392,7 @@ void PlayerController::displayVolumeProgressBar() {
 }
 
 void PlayerController::displayPlayerStatusBox() {
+    const int STATUS_FIELD_WIDTH = 44;
     static int statusUpdateCounter = 0;
     statusUpdateCounter++;
 
@@ -400,13 +401,14 @@ void PlayerController::displayPlayerStatusBox() {
         statusUpdateCounter = 1;  // Reset to 1 instead of 0 to avoid showing #000000
     }
 
-    Serial.println(F("    ┌───────────────────────────────────────────────────────┐"));
-       Serial.printf("    | PlayerController Status Update                 %6d |\n", statusUpdateCounter);
-    Serial.println(F("    +───────────────────────────────────────────────────────+"));
+    Serial.println(F("    ┌─────────────────────────────────────────────────────────────┐"));
+       Serial.printf("    | PlayerController Status Update                       %6d |\n", statusUpdateCounter);
+    Serial.println(F("    +─────────────────────────────────────────────────────────────+"));
 
-    Serial.printf("    │ Player type:    %-38s|\n", getPlayerTypeName());
+    // TODO move these to a separate function for better readability
+    Serial.printf("    │ Player type:    %-44s|\n", getPlayerTypeName());
     // Display current equalizer preset
-    Serial.printf("    │ EQ Preset:      %-38s|\n", equalizerPresetToString(currentEqualizerPreset));
+    Serial.printf("    │ EQ Preset:      %-44s|\n", equalizerPresetToString(currentEqualizerPreset));
 
     displayVolumeProgressBar();
 
@@ -416,15 +418,15 @@ void PlayerController::displayPlayerStatusBox() {
              (currentTrackName && currentTrackName[0] != '\0') ? " (" : "",
              (currentTrackName && currentTrackName[0] != '\0') ? currentTrackName : "",
              (currentTrackName && currentTrackName[0] != '\0') ? ")" : "");
-    Serial.printf("    │ Current track:  %-38s|\n", trackInfo);
-    Serial.printf("    │ Player status:  %-38s|\n", playerStatusToString(playerStatus));
+    Serial.printf("    │ Current track:  %-*s|\n", STATUS_FIELD_WIDTH, trackInfo);
+    Serial.printf("    │ Player status:  %-*s|\n", STATUS_FIELD_WIDTH, playerStatusToString(playerStatus));
 
     if (playerStatus == STATUS_PLAYING) {
         if (playDuration > 0) {
             char durationStr[40], progressStr[40], remainingStr[40];
 
             snprintf(durationStr, sizeof(durationStr), "%lu ms (playing)", playDuration);
-            Serial.printf("    │ Play duration:  %-38s|\n", durationStr);
+            Serial.printf("    │ Play duration:  %-44s|\n", durationStr);
 
             unsigned long long currentTime = millis();
             unsigned long long elapsedTime = (currentTime - playStartTime) / 1000; // Convert to seconds
@@ -442,8 +444,8 @@ void PlayerController::displayPlayerStatusBox() {
             snprintf(progressStr, sizeof(progressStr), "%s %llu/%llu s", progressBar, elapsedTime, totalDuration);
             snprintf(remainingStr, sizeof(remainingStr), "%llu s", remainingTime);
 
-            Serial.printf("    │ Progress:       %-38s|\n", progressStr);
-            Serial.printf("    │ Remaining:      %-38s|\n", remainingStr);
+            Serial.printf("    │ Progress:       %-44s|\n", progressStr);
+            Serial.printf("    │ Remaining:      %-44s|\n", remainingStr);
 
 
 
@@ -452,16 +454,16 @@ void PlayerController::displayPlayerStatusBox() {
             unsigned long elapsedTime = (millis() - playStartTime) / 1000; // Convert to seconds
             char playbackStr[40];
             snprintf(playbackStr, sizeof(playbackStr), "%lu s (No duration set)", elapsedTime);
-            Serial.printf("    │ Playback time:  %-38s|\n", playbackStr);
+            Serial.printf("    │ Playback time:  %-44s|\n", playbackStr);
         }
     }
 
     if (fadeDirection != FadeDirection::NONE) {
-        Serial.printf("    │ Fade in progress: %-34s|\n", (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
-        Serial.printf("    │ Current volume: %d, Target volume: %-19d|\n", currentVolume, targetVolume);
+        Serial.printf("    │ Fade in progress: %-44s|\n", (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
+        Serial.printf("    │ Current volume: %d, Target volume: %-44d|\n", currentVolume, targetVolume);
     }
 
-    Serial.println(F("    └───────────────────────────────────────────────────────┘"));
+    Serial.println(F("    └─────────────────────────────────────────────────────────────┘"));
 }
 
 void PlayerController::update() {
