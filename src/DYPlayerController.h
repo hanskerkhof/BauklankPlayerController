@@ -1,6 +1,4 @@
-// DYPlayerController.h
-#ifndef DY_PLAYER_CONTROLLER_H
-#define DY_PLAYER_CONTROLLER_H
+#pragma once
 
 #include "BauklankPlayerController.h"
 #include <SoftwareSerial.h>
@@ -29,5 +27,3 @@ public:
 protected:
     void setPlayerVolume(uint8_t playerVolume) override;
 };
-
-#endif // DY_PLAYER_CONTROLLER_H

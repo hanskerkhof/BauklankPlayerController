@@ -1,9 +1,6 @@
 #include "DYPlayerController.h"
 #include <Arduino.h>
 
-
-
-
 DYPlayerController::DYPlayerController(int rxPin, int txPin)
     : mySoftwareSerial(rxPin, txPin), myDYPlayer(&mySoftwareSerial) {
 }
@@ -38,28 +35,6 @@ void DYPlayerController::begin() {
     myDYPlayer.setEq(DY::Eq::Normal);
     delay(slp);
 }
-
-//void DYPlayerController::playSound(int track) {
-////    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-//        Serial.printf("▶️ %s - track: %u (Dec)\n", __PRETTY_FUNCTION__, track);
-////    #endif
-//    char path[11];
-//    sprintf(path, "/%05d.mp3", track);
-//    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-//       Serial.printf("     Playing track: %d, path: %s\n", track, path);
-//        Serial.printf("     myDYPlayer.playSpecifiedDevicePath(%s)\n", path);
-//    #endif
-//    // Call base class for status
-//    PlayerController::playSound(track, 0, "");
-//    // Play on the device
-//}
-
-//void DYPlayerController::playSound(int track, unsigned long durationMs) {
-////    // Call base class for status and durationMs
-////    PlayerController::playSound(track, durationMs, "");
-//
-//    DYPlayerController::playSound(track);
-//}
 
 void DYPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
 

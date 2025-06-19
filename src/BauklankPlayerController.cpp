@@ -55,15 +55,6 @@ int PlayerController::getVolume() {
     return currentVolume;
 }
 
-//void PlayerController::playSoundRandom(int minTrack, int maxTrack) {
-//    int rnd = random(minTrack, maxTrack + 1);
-//    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-//        Serial.printf("  🎲▶️ %s - Playing random track: %d\n", __PRETTY_FUNCTION__, rnd);
-//    #endif
-//    playSound(rnd);
-//}
-
-
 /**
  * @brief Decodes a track number into folder and track components.
  *
@@ -94,29 +85,6 @@ void PlayerController::decodeFolderAndTrack(uint16_t trackNumber, uint8_t& folde
     track = (trackNumber - 1) % 255 + 1;
 }
 
-//void PlayerController::playSound(int track) {
-//    playerStatus = STATUS_PLAYING;
-//    currentTrack = track;
-//    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-//        Serial.printf("  ▶️ %s - Playing track: %d, playerStatus: %s\n", __PRETTY_FUNCTION__, track, playerStatusToString(playerStatus));
-//    #endif
-//    displayPlayerStatusBox();
-//}
-
-//void PlayerController::playSound(int track, unsigned long durationMs) {
-//
-//    // Add duration
-//    playStartTime = millis();
-//    playDuration = durationMs;
-//
-//    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-//        Serial.printf("  ▶️ %s - Playing track: %d, duration: %d ms, startTime: %lu, endTime: %lu\n",
-//                      __PRETTY_FUNCTION__, track, durationMs, playStartTime, playStartTime + playDuration);
-//    #endif
-//
-//    PlayerController::playSound(track);
-//}
-
 void PlayerController::playSoundSetStatus(int track, unsigned long durationMs, const char* trackName) {
     playerStatus = STATUS_PLAYING;
     currentTrack = track;
@@ -130,7 +98,6 @@ void PlayerController::playSoundSetStatus(int track, unsigned long durationMs, c
             Serial.printf("  ⚠️ %s - Warning: durationMs is 0 or negative (%lu). Using default duration.\n", __PRETTY_FUNCTION__, durationMs);
 //        #endif
     }
-//    playDuration = durationMs;
     if (trackName != nullptr && trackName[0] != '\0') {
         currentTrackName = trackName;
     } else {
@@ -145,7 +112,6 @@ void PlayerController::playSoundSetStatus(int track, unsigned long durationMs, c
         Serial.printf("  ▶️ %s - Playing track: %d (%s), duration: %d ms, startTime: %lu, endTime: %lu\n",
                       __PRETTY_FUNCTION__, track, currentTrackName, durationMs, playStartTime, playStartTime + playDuration);
 //    #endif
-//    PlayerController::playSound(track);
     displayPlayerStatusBox();
 }
 

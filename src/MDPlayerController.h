@@ -1,6 +1,4 @@
-// MDPlayerController.h
-#ifndef MD_PLAYER_CONTROLLER_H
-#define MD_PLAYER_CONTROLLER_H
+#pragma once
 
 #include "BauklankPlayerController.h"
 #include <SoftwareSerial.h>
@@ -10,17 +8,13 @@ class MDPlayerController : public PlayerController {
 public:
     const char* getPlayerTypeName() const override { return "MD Player"; }
     MDPlayerController(int rxPin, int txPin);
-    void begin() override;
-//    void playSound(int track) override;
-//    void playSound(int track, unsigned long durationMs) override;
+    void begin() override;rack, unsigned long durationMs) override;
     void playSound(int track, unsigned long durationMs, const char* trackName) override;
-//    void playSound(int track, unsigned long durationMs, const char* trackName);
     void stopSound();
     void enableLoop() override;
     void disableLoop() override;
     void setEqualizerPreset(EqualizerPreset preset) override;
     void update();
-//    using PlayerController::playSoundRandom;
 
     // Command definitions
     enum MDPlayerCommand : uint8_t {
@@ -72,5 +66,3 @@ protected:
 private:
 
 };
-
-#endif // MD_PLAYER_CONTROLLER_H

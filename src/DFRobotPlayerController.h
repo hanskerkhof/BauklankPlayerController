@@ -1,6 +1,4 @@
-// DFRobotPlayerController.h
-#ifndef DFROBOT_PLAYER_CONTROLLER_H
-#define DFROBOT_PLAYER_CONTROLLER_H
+#pragma once
 
 #include "BauklankPlayerController.h"
 #include <SoftwareSerial.h>
@@ -29,5 +27,3 @@ public:
 protected:
     void setPlayerVolume(uint8_t playerVolume) override;
 };
-
-#endif // DFROBOT_PLAYER_CONTROLLER_H

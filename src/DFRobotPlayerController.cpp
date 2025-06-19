@@ -39,26 +39,6 @@ void DFRobotPlayerController::begin() {
 //        #endif
     }
 
-//void DFRobotPlayerController::playSound(int track) {
-//    int _folder = ((track - 1) / 255) + 1;
-//    int _track = ((track - 1) % 255) + 1;
-//    #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
-//        Serial.printf("  ▶️ %s - myDFPlayer.playFolder(%d, %d)\n",  __PRETTY_FUNCTION__, _folder, _track);
-//    #endif
-//    myDFPlayer.playFolder(_folder, _track);
-//    //  delay(20);
-//
-//    // Call base class for status
-//    PlayerController::playSound(track);
-//}
-
-//void DFRobotPlayerController::playSound(int track, unsigned long durationMs) {
-//    // Call base class for status and duration
-//    PlayerController::playSound(track, durationMs);
-//
-//    playSound(track);
-//}
-
 void DFRobotPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
 
     int _folder = ((track - 1) / 255) + 1;
@@ -70,10 +50,6 @@ void DFRobotPlayerController::playSound(int track, unsigned long durationMs, con
 
     // Call the base class for status, duration and trackName
     PlayerController::playSoundSetStatus(track, durationMs, trackName);
-
-//    // Then call playsound with the 2 parameters
-//    // playSound(track, durationMs);
-//    playSound(track);
 }
 
 void DFRobotPlayerController::stopSound() {
@@ -142,6 +118,5 @@ void DFRobotPlayerController::setEqualizerPreset(EqualizerPreset preset) {
 
 void DFRobotPlayerController::update() {
     PlayerController::update(); // Call the base class update method
-    // Implement any necessary update logic here
-    // For example, you might want to check if a track has finished playing
+    // Add any DF-specific update logic here if needed
 }

@@ -1,6 +1,4 @@
-// BauklankPlayerController.h
-#ifndef BAUKLANK_PLAYER_CONTROLLER_H
-#define BAUKLANK_PLAYER_CONTROLLER_H
+#pragma once
 
 #if __has_include("debug.h")
     #include "debug.h"
@@ -158,5 +156,3 @@ private:
     int midLevel = 50;   // Example default value
     int trebleLevel = 50; // Example default value
 };
-
-#endif // BAUKLANK_PLAYER_CONTROLLER_H
