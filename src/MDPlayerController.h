@@ -8,7 +8,7 @@ class MDPlayerController : public PlayerController {
 public:
     const char* getPlayerTypeName() const override { return "MD Player"; }
     MDPlayerController(int rxPin, int txPin);
-    void begin() override;rack, unsigned long durationMs) override;
+    void begin() override;
     void playSound(int track, unsigned long durationMs, const char* trackName) override;
     void stopSound();
     void enableLoop() override;

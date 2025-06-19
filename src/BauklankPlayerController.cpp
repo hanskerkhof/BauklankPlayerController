@@ -296,6 +296,7 @@ void PlayerController::fadeTo(int durationMs, int targetVolume) {
         Serial.printf("  🎚️ %s - Fade already in progress, ignoring new fade request\n",
                       __PRETTY_FUNCTION__);
     }
+    displayPlayerStatusBox();
 }
 
 
@@ -425,7 +426,7 @@ void PlayerController::displayPlayerStatusBox() {
     }
 
     if (fadeDirection != FadeDirection::NONE) {
-        Serial.printf("    │ Fade in progress: %-44s|\n", (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
+        Serial.printf("    │ Fade direction: %-44s|\n", (fadeDirection == FadeDirection::IN) ? "IN" : "OUT");
         Serial.printf("    │ Current volume: %d, Target volume: %-44d|\n", currentVolume, targetVolume);
     }
 
