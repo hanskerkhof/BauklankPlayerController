@@ -124,13 +124,13 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
     if (playerVolume != lastSetPlayerVolume) {
         mdPlayerCommand(SET_VOLUME, playerVolume);
         lastSetPlayerVolume = playerVolume;
-        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+//        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
             Serial.printf("%s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
-        #endif
+//        #endif
     } else {
-        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
+//        #if BAUKLANK_PLAYER_CONTROLLER_DEBUG == true
           Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
-        #endif
+//        #endif
     }
 }
 
