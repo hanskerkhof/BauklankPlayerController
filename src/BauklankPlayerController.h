@@ -4,11 +4,6 @@
     #include "debug.h"
 #endif
 
-#ifndef BAUKLANK_PLAYER_CONTROLLER_DEBUG
-// Enable debug output for this class.
-#define BAUKLANK_PLAYER_CONTROLLER_DEBUG false
-#endif
-
 #ifndef DISPLAY_PLAYER_STATUS_ENABLED
 // Display player status on a player state change.
 #define DISPLAY_PLAYER_STATUS_ENABLED false
@@ -25,7 +20,7 @@ class PlayerController {
 public:
     static const uint8_t MIN_VOLUME = 0;
     static const uint8_t MAX_VOLUME = 30;
-//    static const int DEFAULT_VOLUME = 24;
+    static const int DEFAULT_VOLUME = 15;
     static const int MIN_FADE_DURATION_MS = 1400;  // Add this line
 
     enum PlayerStatus {
@@ -92,13 +87,17 @@ public:
 
     virtual const char* getPlayerTypeName() const { return "Unknown"; }
 
-    virtual void begin() = 0;  // Add this line
+    virtual void begin() = 0;
     virtual void setVolume(int volume);
     int getVolume();
 
     virtual void fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs, const char* trackName);
     virtual void fadeOut(int durationMs, int targetVolume, bool stopSound);
     virtual void fadeTo(int durationMs,int targetVolume);
+    void stopFade(bool stopSound = false);
+    bool isFading();
+    bool isFadingIn();
+    bool isFadingOut();
 
     virtual void playSound(int track, unsigned long durationMs, const char* trackName);
 
@@ -147,6 +146,7 @@ protected:
     bool shouldStopAfterFade = false;
 
 private:
+    const char* fadeDirectionToString(FadeDirection direction);
     unsigned long fadeStartTime;
     int currentTrack;
     const char* currentTrackName;
