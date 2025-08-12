@@ -1,13 +1,17 @@
 #include "AnalogReader.h"
 
-#define MD_PLAYER_ENABLED
+#define NO_PLAYER_ENABLED
+// #define MD_PLAYER_ENABLED
 // #define DY_PLAYER_ENABLED
 // #define DF_PLAYER_ENABLED
 
 #include <BauklankPlayerController.h>
 
-#define MD_PLAYER_RX_PIN D1
-#define MD_PLAYER_TX_PIN D2
+#define NO_PLAYER_RX_PIN 0
+#define NO_PLAYER_TX_PIN 2
+
+// #define MD_PLAYER_RX_PIN D1
+// #define MD_PLAYER_TX_PIN D2
 
 // #define DY_PLAYER_RX_PIN D5 // Green -> TX on player - Pin next to VCC
 // #define DY_PLAYER_TX_PIN D6 // Blue -> RX on player - Third pin from VCC
@@ -24,6 +28,9 @@
 #elif defined(DF_PLAYER_ENABLED)
   #include <DFRobotPlayerController.h>
   DFRobotPlayerController player(DF_PLAYER_RX_PIN, DF_PLAYER_TX_PIN);
+#elif defined(NO_PLAYER_ENABLED)
+  #include <NOPlayerController.h>
+  NOPlayerController player(NO_PLAYER_RX_PIN, NO_PLAYER_TX_PIN);
 #endif
 
 
@@ -77,6 +84,7 @@ void setup() {
 
 void loop() {
   player.update();
+#ifndef NO_PLAYER_ENABLED
   analogReader.update();
 
   // Sound playing logic
@@ -85,7 +93,7 @@ void loop() {
     Serial.printf("🔊 [%s] Setting volume to: %d\n", __PRETTY_FUNCTION__, playerVolume);
     player.setVolume(playerVolume);
     Serial.printf("▶️ [%s] Playing sound index: %d, duration: %d ms\n", __PRETTY_FUNCTION__, soundIndex, trackDurationMs);
-    player.playSound(soundIndex, trackDurationMs);
+    player.playSound(soundIndex, trackDurationMs, "TEST_SOUND");
 
     // Increment soundIndex and reset if it exceeds MAX_SOUND_INDEX
     soundIndex++;
@@ -95,4 +103,5 @@ void loop() {
 
     delay(20); // wait a bit so we are sure that the sound has started
   }
+#endif
 }
