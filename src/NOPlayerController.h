@@ -1,8 +1,5 @@
 #pragma once
-
 #include "BauklankPlayerController.h"
-#include <SoftwareSerial.h>
-
 
 class NOPlayerController : public PlayerController {
 public:
@@ -17,14 +14,9 @@ public:
     void update();
 
 private:
-    SoftwareSerial mySoftwareSerial;
     int8_t lastSetPlayerVolume = -1;  // Initialize to an invalid value
     uint8_t currentVolume; // To keep track of the current volume
     bool isLooping = false;
-    void selectTFCard();
-
-    // Define DEV_TF separately as it's not part of the command enum
-    static constexpr uint8_t DEV_TF = 0x02;  ///< select storage device to TF card
 
 protected:
     void setPlayerVolume(uint8_t playerVolume) override;
