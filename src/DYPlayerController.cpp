@@ -116,6 +116,7 @@ void DYPlayerController::setEqualizerPreset(EqualizerPreset preset) {
             dyPreset = DY::Eq::Normal;
             break;
     }
+    Serial.printf("!!!!! setEqualizerPreset: %d", dyPreset);
     myDYPlayer.setEq(dyPreset);
 
       DEBUG_PRINT(DebugLevel::COMMANDS, "  🎚️ DYPlayer: Set equalizer preset to %d", static_cast<int>(preset));
