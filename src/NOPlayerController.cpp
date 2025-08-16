@@ -16,12 +16,14 @@ void NOPlayerController::disableLoop() {
 }
 
 void NOPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
+    PlayerController::playSoundSetStatus(track, durationMs, trackName);
 }
 
 void NOPlayerController::stopSound() {
+  PlayerController::stopSoundSetStatus();
 }
 
- void NOPlayerController::setPlayerVolume(uint8_t playerVolume) {
+void NOPlayerController::setPlayerVolume(uint8_t playerVolume) {
 }
 
 void NOPlayerController::setEqualizerPreset(EqualizerPreset preset) {

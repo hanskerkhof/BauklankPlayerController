@@ -3,7 +3,7 @@
 
 class NOPlayerController : public PlayerController {
 public:
-    const char* getPlayerTypeName() const override { return "MD Player"; }
+    const char* getPlayerTypeName() const override { return "NO Player"; }
     NOPlayerController(int rxPin, int txPin);
     void begin() override;
     void playSound(int track, unsigned long durationMs, const char* trackName) override;

@@ -1,7 +1,12 @@
 #pragma once
 
 #include "BauklankPlayerController.h"
-#include <SoftwareSerial.h>
+#if defined(ESP32)
+  #include <HardwareSerial.h>
+#elif defined(ESP8266)
+  #include <SoftwareSerial.h>
+#endif
+//#include <SoftwareSerial.h>
 
 
 class MDPlayerController : public PlayerController {
@@ -50,7 +55,11 @@ public:
         QUERY_TOT_FLDR = 0x4f,    ///< Query number of folders
     };
 private:
-    SoftwareSerial mySoftwareSerial;
+    #if defined(ESP32)
+        HardwareSerial mySerial;
+    #elif defined(ESP8266)
+        SoftwareSerial mySoftwareSerial;
+    #endif
     int8_t lastSetPlayerVolume = -1;  // Initialize to an invalid value
     uint8_t currentVolume; // To keep track of the current volume
     bool isLooping = false;

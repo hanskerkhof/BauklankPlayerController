@@ -4,24 +4,58 @@
 
 using CMD = MDPlayerController::MDPlayerCommand;
 
-MDPlayerController::MDPlayerController(int rxPin, int txPin)
- : mySoftwareSerial(rxPin, txPin) {
-    // Initialize SoftwareSerial in the constructor
-    mySoftwareSerial.begin(9600);
-    delay(300);  // Give some time for the serial connection to establish
+#if defined(ESP32)
+  MDPlayerController::MDPlayerController(int rxPin, int txPin)
+      : mySerial(2)  // Using UART2 on ESP32
+  {
+      mySerial.begin(9600, SERIAL_8N1, rxPin, txPin);
+      delay(300);  // Give some time for the serial connection to establish
+      selectTFCard();
+  }
+#else
+  MDPlayerController::MDPlayerController(int rxPin, int txPin)
+    : mySoftwareSerial(rxPin, txPin)
+  {
+      mySoftwareSerial.begin(9600);
+      delay(300);
+      selectTFCard();
+  }
+#endif
 
-    // Select TF card in the constructor
-    selectTFCard();
-}
+//MDPlayerController::MDPlayerController(int rxPin, int txPin)
+// : mySoftwareSerial(rxPin, txPin) {
+//    // Initialize SoftwareSerial in the constructor
+//#if defined(ESP32)
+//    : mdSerial(2)  // Using UART2 (you can use 1 or 2)
+//{
+//    mdSerial.begin(9600, SERIAL_8N1, rxPin, txPin);
+//#elif defined(ESP8266)
+//    : mySoftwareSerial(rxPin, txPin)
+//{
+//    mySoftwareSerial.begin(9600);
+//#endif
+//
+////    mySoftwareSerial.begin(9600);
+//    delay(300);  // Give some time for the serial connection to establish
+//
+//    // Select TF card in the constructor
+//    selectTFCard();
+//}
 
 void MDPlayerController::begin() {
     // Call base class begin() first
     PlayerController::begin();
 
-// TODO Only print this when `DebugLevel::COMMANDS` is set
-Serial.printf("  SETUP - mySoftwareSerial.begin(%d)\n", 9600);
+    // TODO Only print this when `DebugLevel::COMMANDS` is set
 
-    mySoftwareSerial.begin(9600);
+    #if defined(ESP32)
+        Serial.printf("  SETUP - mySerial.begin(%d)\n", 9600);
+        mySerial.begin(9600);
+    #elif defined(ESP8266)
+        Serial.printf("  SETUP - mySoftwareSerial.begin(%d)\n", 9600);
+        mySoftwareSerial.begin(9600);
+    #endif
+//    mySoftwareSerial.begin(9600);
     delay(300);  // (was 1000) TODO could this be a shorter delay?
 }
 
@@ -62,6 +96,7 @@ void MDPlayerController::playSound(int track, unsigned long durationMs, const ch
     PlayerController::playSoundSetStatus(track, durationMs, trackName);
 
     DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::PLAYBACK, "  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
+    Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
 //    DEBUG_PRINT(DebugLevel::COMMANDS, "  ▶️ %s - track: %u (Dec)", __PRETTY_FUNCTION__, track);
 
     mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
@@ -95,7 +130,12 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
     frame[7] = 0xef;                // ending byte
 
     for (uint8_t i = 0; i < 8; i++) {
-        mySoftwareSerial.write(frame[i]);
+        #if defined(ESP32)
+            mySerial.write(frame[i]);
+        #elif defined(ESP8266)
+            mySoftwareSerial.write(frame[i]);
+        #endif
+//        mySoftwareSerial.write(frame[i]);
     }
     delay(20);
     //    unsigned long endTime = millis();  // End timing

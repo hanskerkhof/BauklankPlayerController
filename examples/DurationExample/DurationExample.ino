@@ -1,7 +1,8 @@
 #include "debug.h"
 
+#define  NO_PLAYER_ENABLED
 // #define MD_PLAYER_ENABLED
-#define DY_PLAYER_ENABLED
+// #define DY_PLAYER_ENABLED
 // #define DF_PLAYER_ENABLED
 
 // Include the base class for the player controller
@@ -35,6 +36,15 @@ DYPlayerController player(DY_PLAYER_RX_PIN, DY_PLAYER_TX_PIN);
 #include <DFRobotPlayerController.h>
 // Instantiate the DFRobotPlayerController with the RX and TX pins
 DFRobotPlayerController player(DF_PLAYER_RX_PIN, DF_PLAYER_TX_PIN);
+#elif defined(NO_PLAYER_ENABLED)
+// #define DF_PLAYER_RX_PIN D1
+// #define DF_PLAYER_TX_PIN D2
+#define NO_PLAYER_RX_PIN 17
+#define NO_PLAYER_TX_PIN 18
+// Include the specific class for the player controller
+#include <NOPlayerController.h>
+// Instantiate the DFRobotPlayerController with the RX and TX pins
+NOPlayerController player(NO_PLAYER_RX_PIN, NO_PLAYER_TX_PIN);
 #endif
 
 const int MIN_SOUND_INDEX = 5;

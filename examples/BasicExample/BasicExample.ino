@@ -1,7 +1,7 @@
 #include "AnalogReader.h"
 
-#define NO_PLAYER_ENABLED
-// #define MD_PLAYER_ENABLED
+// #define NO_PLAYER_ENABLED
+#define MD_PLAYER_ENABLED
 // #define DY_PLAYER_ENABLED
 // #define DF_PLAYER_ENABLED
 
@@ -12,6 +12,8 @@
 
 // #define MD_PLAYER_RX_PIN D1
 // #define MD_PLAYER_TX_PIN D2
+#define MD_PLAYER_RX_PIN 17 // uart2
+#define MD_PLAYER_TX_PIN 18 // uart2
 
 // #define DY_PLAYER_RX_PIN D5 // Green -> TX on player - Pin next to VCC
 // #define DY_PLAYER_TX_PIN D6 // Blue -> RX on player - Third pin from VCC
