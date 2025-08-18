@@ -172,7 +172,7 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
         lastSetPlayerVolume = playerVolume;
 
 // TODO Only print this when `DebugLevel::COMMANDS` is set
-Serial.printf("%s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
+Serial.printf("  🔊 %s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
 
     } else {
 
