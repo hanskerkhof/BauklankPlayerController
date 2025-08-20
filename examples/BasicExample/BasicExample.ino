@@ -1,4 +1,4 @@
-#include "AnalogReader.h"
+#include <BauklankAnalogReader.h>
 
 // #define NO_PLAYER_ENABLED
 #define MD_PLAYER_ENABLED
