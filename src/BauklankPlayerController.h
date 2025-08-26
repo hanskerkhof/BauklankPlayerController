@@ -1,4 +1,5 @@
 #pragma once
+// #pragma GCC system_header
 
 #if __has_include("debug.h")
     #include "debug.h"
