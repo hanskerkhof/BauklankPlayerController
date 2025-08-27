@@ -1,4 +1,5 @@
 #pragma once
+// #pragma GCC system_header
 
 #if __has_include("debug.h")
     #include "debug.h"
@@ -18,6 +19,8 @@
 
 class PlayerController {
 public:
+    bool debug = false;
+
     static const uint8_t MIN_VOLUME = 0;
     static const uint8_t MAX_VOLUME = 30;
     static const int DEFAULT_VOLUME = 15;
@@ -75,6 +78,11 @@ public:
         CLASSIC = 4,
         BASS = 5
     };
+
+    // Simple debug setter
+    void setDebug(bool enabled) {
+        debug = enabled;
+    }
 
     // Helpers
     const char* playerStatusToString(PlayerStatus status) {

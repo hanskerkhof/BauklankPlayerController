@@ -49,10 +49,10 @@ void MDPlayerController::begin() {
     // TODO Only print this when `DebugLevel::COMMANDS` is set
 
     #if defined(ESP32)
-        Serial.printf("  SETUP - mySerial.begin(%d)\n", 9600);
+        if(debug) Serial.printf("  SETUP - mySerial.begin(%d)\n", 9600);
         mySerial.begin(9600);
     #elif defined(ESP8266)
-        Serial.printf("  SETUP - mySoftwareSerial.begin(%d)\n", 9600);
+        if(debug) Serial.printf("  SETUP - mySoftwareSerial.begin(%d)\n", 9600);
         mySoftwareSerial.begin(9600);
     #endif
 //    mySoftwareSerial.begin(9600);
@@ -62,7 +62,7 @@ void MDPlayerController::begin() {
 void MDPlayerController::selectTFCard() {
 
 // TODO Only print this when `DebugLevel::COMMANDS` is set
-Serial.printf("  Selecting TF card\n");
+if(debug) Serial.printf("  Selecting TF card\n");
 
     mdPlayerCommand(CMD::SEL_DEV, DEV_TF);  // select the TF card
     delay(300);
@@ -70,8 +70,7 @@ Serial.printf("  Selecting TF card\n");
 
 void MDPlayerController::enableLoop() {
 
-// TODO Only print this when `DebugLevel::COMMANDS` is set
-Serial.println(F("MDPlayerController: Enabling loop"));
+if(debug) Serial.println(F("MDPlayerController: Enabling loop"));
 
     mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);  // select the TF card
     isLooping = true;
@@ -80,7 +79,7 @@ Serial.println(F("MDPlayerController: Enabling loop"));
 void MDPlayerController::disableLoop() {
 
 // TODO Only print this when `DebugLevel::COMMANDS` is set
-Serial.println(F("DYPlayerController: Disabling loop"));
+if(debug) Serial.println(F("DYPlayerController: Disabling loop"));
 
     mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);  // select the TF card
     isLooping = false;
@@ -96,7 +95,7 @@ void MDPlayerController::playSound(int track, unsigned long durationMs, const ch
     PlayerController::playSoundSetStatus(track, durationMs, trackName);
 
     DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::PLAYBACK, "  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
-    Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
+    if(debug) Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
 //    DEBUG_PRINT(DebugLevel::COMMANDS, "  ▶️ %s - track: %u (Dec)", __PRETTY_FUNCTION__, track);
 
     mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
@@ -107,7 +106,7 @@ void MDPlayerController::playSound(int track, unsigned long durationMs, const ch
 void MDPlayerController::stopSound() {
 
 // TODO Only print this when `DebugLevel::COMMANDS` is set
-Serial.printf("      %s - mdPlayerCommand(CMD::STOP_PLAY, 0)\n", __PRETTY_FUNCTION__);
+if(debug) Serial.printf("      %s - mdPlayerCommand(CMD::STOP_PLAY, 0)\n", __PRETTY_FUNCTION__);
 
     mdPlayerCommand(CMD::STOP_PLAY, 0);
 
@@ -141,7 +140,7 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
     //    unsigned long endTime = millis();  // End timing
     //    unsigned long duration = endTime - startTime;  // Calculate duration
     //    // Print the duration
-    //    Serial.printf("mdPlayerCommand execution time: %lu ms\n", duration);
+    //    if(debug) Serial.printf("mdPlayerCommand execution time: %lu ms\n", duration);
 }
 
 
@@ -171,13 +170,12 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
         mdPlayerCommand(SET_VOLUME, playerVolume);
         lastSetPlayerVolume = playerVolume;
 
-// TODO Only print this when `DebugLevel::COMMANDS` is set
-Serial.printf("  🔊 %s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
+        if(debug) Serial.printf("  🔊 %s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
 
     } else {
 
 // TODO Only print this when `DebugLevel::COMMANDS` is set
-Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
+if(debug) Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
 
     }
 }
@@ -211,7 +209,7 @@ void MDPlayerController::setEqualizerPreset(EqualizerPreset preset) {
     mdPlayerCommand(SET_EQUALIZER, mdPreset);
 
 // TODO Only print this when `DebugLevel::COMMANDS` is set
-Serial.printf("MDPlayer: Set equalizer preset to %d\n", static_cast<int>(preset));
+if(debug) Serial.printf("MDPlayer: Set equalizer preset to %d\n", static_cast<int>(preset));
 
     // call base class for status
     PlayerController::setEqualizerPreset(preset);
