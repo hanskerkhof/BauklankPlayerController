@@ -1,3 +1,7 @@
+#ifndef ESP32
+// Not for this architecture – compile as empty TU
+#else
+
 #include <Arduino.h>
 #include <SPI.h>
 #include <SD.h>
@@ -18,21 +22,48 @@ AKPlayerController::AKPlayerController() {
 }
 
 void AKPlayerController::begin() {
-    // Call base class begin() first
-    PlayerController::begin();
+  // Call base class begin() first
+  PlayerController::begin();
 
 
-    // Initialize AudioKit
-    auto config = i2s.defaultConfig(TX_MODE);
-    config.sd_active = true;
-    i2s.begin(config);
+  // Initialize AudioKit
+  auto config = i2s.defaultConfig(TX_MODE);
+  config.sd_active = true;
+  i2s.begin(config);
+
+  // Make sure no default actions are active
+  // TODO enable via a method in the class...
+//  i2s.audioActions().clearActions();   // <— IMPORTANT: removes addVolumeActions(), etc.
+
+  // For visibility: print what pins the driver thinks the keys are on
+//  auto pins = i2s.boardPins();
+//  Serial.printf("KEY pins: K1=%d K2=%d K3=%d K4=%d K5=%d K6=%d\n",
+//                pins.key1, pins.key2, pins.key3, pins.key4, pins.key5, pins.key6);
+
+
+  using audio_driver::AudioDriverKey;
+
+  i2s.addAction(AudioDriverKey::KEY_VOLUME_UP, [](bool pressed, int /*pin*/, void* ctx){
+    if (!pressed) return;
+    auto* self = static_cast<AKPlayerController*>(ctx);
+    if (self->lastSetPlayerVolume < 30)
+      self->setPlayerVolume(self->lastSetPlayerVolume + 1);
+  }, this);
+
+  i2s.addAction(AudioDriverKey::KEY_VOLUME_DOWN, [](bool pressed, int /*pin*/, void* ctx){
+    if (!pressed) return;
+    auto* self = static_cast<AKPlayerController*>(ctx);
+    if (self->lastSetPlayerVolume > 0)
+      self->setPlayerVolume(self->lastSetPlayerVolume - 1);
+  }, this);
 
     // Set initial volume
+    // TODO review this code, the implementing sketch should be responsible for setting the volume
     auto vcfg = volumeStream.defaultConfig();
     vcfg.copyFrom(config);
     // vcfg.allow_boost = true; // Uncomment to activate amplification using linear control
     volumeStream.begin(vcfg);
-    volumeStream.setVolume(0.7); // Initial volume at 70%
+    // volumeStream.setVolume(0.7); // Initial volume at 70%
 
     // true = 1-bit mode (uses CLK=14, CMD=15, D0=2)
     if (!SD_MMC.begin("/sdcard", /*mode1bit*/ true)) {
@@ -62,9 +93,11 @@ void AKPlayerController::disableLoop() {
 }
 
 void AKPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
-  // Close any previously opened file
+
   Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
 
+  // Close any previously opened file
+  // TODO Only close the file if the new file is successfully opened
   if (audioFile) {
       audioFile.close();
   }
@@ -94,31 +127,7 @@ void AKPlayerController::playSound(int track, unsigned long durationMs, const ch
   // Start the copier
   copier.begin(decoder, audioFile);
 
-//    char path[11];
-//    sprintf(path, "/%05d.mp3", track);
-//
-////    DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::PLAYBACK, "  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
-//
-//      Serial.printf("      Playing track: %d, path: %s\n", track, path);
-//      Serial.printf("      Opening: %s'", path);
-//      audioFile = SD.open(path);
-//      if (!audioFile) {
-//        Serial.println("      Failed to open audio file!");
-//      } else {
-//        Serial.println("      Audio file opened successfully");
-//      }
-//
-//      // Not needed ?!?
-//      // // Reinitialize decoder and copier
-//      // Serial.println("Reinitializing decoder and copier");
-//      // decoder.begin();
-//      // copier.begin(decoder, audioFile);
-//      // myAKPlayer.play(track);
-//
-////    myDYPlayer.playSpecifiedDevicePath(DY::Device::Sd, path);
-//    // Call the base class for status, duration and trackName
-////    PlayerController::playSoundSetStatus(track, durationMs, trackName);
-
+  // Call the base class for housekeeping
   PlayerController::playSoundSetStatus(track, durationMs, trackName);
 }
 
@@ -153,7 +162,10 @@ void AKPlayerController::setEqualizerPreset(EqualizerPreset preset) {
 }
 
 void AKPlayerController::update() {
-  // Continue audio processing
+  //...
+  // TODO enable via a method in the class...
+  i2s.audioActions().processActions();  // poll & dispatch button actions
+  // Continues audio processing
   if (audioFile && audioFile.available()) {
       if (!copier.copy()) {
           // End of file or error
@@ -165,9 +177,8 @@ void AKPlayerController::update() {
               audioFile.close();
               PlayerController::stopSoundSetStatus();
           }
-//      } else {
-//        Serial.println("Copier running...");
       }
+
   }
   PlayerController::update(); // Call the base class update method
 }
@@ -250,3 +261,4 @@ void AKPlayerController::printSDCardIndex(File dir, String path) {
         entry.close();
     }
 }
+#endif

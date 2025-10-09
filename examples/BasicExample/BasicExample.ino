@@ -37,14 +37,14 @@
   AKPlayerController player;
 #endif
 
-int minSoundIndex = 43;
+int minSoundIndex = 45;
 int maxSoundIndex = 45;
 int currentSoundIndex = minSoundIndex;
 uint8_t playerVolume = 25;
 
 // Define minutes and seconds
-const uint8_t minutes = 0;
-const uint8_t seconds = 3;
+const uint8_t minutes = 15;
+const uint8_t seconds = 27;
 static const uint32_t trackDurationMs = (minutes * 60 + seconds) * 1000;
 
 void setup() {
@@ -66,8 +66,8 @@ void loop() {
     // Sound playing logic
     if (!player.isSoundPlaying()) {
       Serial.printf("🔇 [%s] Not playing\n", __PRETTY_FUNCTION__);
-      Serial.printf("🔊 [%s] Setting volume to: %d\n", __PRETTY_FUNCTION__, playerVolume);
-      player.setVolume(playerVolume);
+      // Serial.printf("🔊 [%s] Setting volume to: %d\n", __PRETTY_FUNCTION__, playerVolume);
+      // player.setVolume(playerVolume);
       Serial.printf("▶️ [%s] Playing sound currentSoundIndex: %d, duration: %d ms\n", __PRETTY_FUNCTION__, currentSoundIndex, trackDurationMs);
       player.playSound(currentSoundIndex, trackDurationMs, "TEST_SOUND");
 
