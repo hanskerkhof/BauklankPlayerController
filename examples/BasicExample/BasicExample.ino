@@ -1,9 +1,8 @@
-#include "AnalogReader.h"
-
 // #define NO_PLAYER_ENABLED
-#define MD_PLAYER_ENABLED
+// #define MD_PLAYER_ENABLED
 // #define DY_PLAYER_ENABLED
 // #define DF_PLAYER_ENABLED
+#define AK_PLAYER_ENABLED
 
 #include <BauklankPlayerController.h>
 
@@ -33,37 +32,20 @@
 #elif defined(NO_PLAYER_ENABLED)
   #include <NOPlayerController.h>
   NOPlayerController player(NO_PLAYER_RX_PIN, NO_PLAYER_TX_PIN);
+#elif defined(AK_PLAYER_ENABLED)
+  #include <AKPlayerController.h>
+  AKPlayerController player;
 #endif
 
+int minSoundIndex = 43;
+int maxSoundIndex = 45;
+int currentSoundIndex = minSoundIndex;
+uint8_t playerVolume = 25;
 
-#define MAX_SOUND_INDEX 14
-int soundIndex = 1;
-uint8_t playerVolume;
-
-// static uint32_t lastSoundPlayedTime = 0;
 // Define minutes and seconds
 const uint8_t minutes = 0;
 const uint8_t seconds = 3;
 static const uint32_t trackDurationMs = (minutes * 60 + seconds) * 1000;
-
-int VOLUME_ANALOG_NUM_SAMPLES = 10;
-int initialVolume = 19;
-AnalogReader analogReader(
-  /*pin=*/A0,
-  /*minValue=*/0,
-  /*maxValue=*/30,
-  /*readInterval=*/3,
-  /*numSamples=*/VOLUME_ANALOG_NUM_SAMPLES,
-  /*debounceInterval=*/50 // Must be greater than 40 to work because the player.setVolume command takes a minimum of 40ms
-);
-
-void onAnalogValueChanged(int newValue) {
-  Serial.printf("🔊 [%s] Analog value changed to: %d\n", __PRETTY_FUNCTION__, newValue);
-  playerVolume = newValue;
-  player.setVolume(playerVolume);
-  // Add your logic here to handle the new value
-  // Here you can update your volume or perform any other action
-}
 
 void setup() {
   Serial.begin(115200);
@@ -74,36 +56,28 @@ void setup() {
   Serial.println(__FILE__);
   Serial.println("Compiled " __DATE__ " of " __TIME__);
   Serial.println(F("--------------------------------------------------------------------------------------------"));
-  // Start the player before the analogReader.
   player.begin();
-  // No need to set volume here, as it's already set by the callback
-  // player.setVolume(volume);
-  Serial.println(F("--------------------------------------------------------------------------------------------"));
-  analogReader.setCallback(onAnalogValueChanged);
-  analogReader.begin();
   Serial.println(F("--------------------------------------------------------------------------------------------"));
 }
 
 void loop() {
   player.update();
-#ifndef NO_PLAYER_ENABLED
-  analogReader.update();
+  #ifndef NO_PLAYER_ENABLED
+    // Sound playing logic
+    if (!player.isSoundPlaying()) {
+      Serial.printf("🔇 [%s] Not playing\n", __PRETTY_FUNCTION__);
+      Serial.printf("🔊 [%s] Setting volume to: %d\n", __PRETTY_FUNCTION__, playerVolume);
+      player.setVolume(playerVolume);
+      Serial.printf("▶️ [%s] Playing sound currentSoundIndex: %d, duration: %d ms\n", __PRETTY_FUNCTION__, currentSoundIndex, trackDurationMs);
+      player.playSound(currentSoundIndex, trackDurationMs, "TEST_SOUND");
 
-  // Sound playing logic
-  if (!player.isSoundPlaying()) {
-    Serial.printf("🔇 [%s] Not playing\n", __PRETTY_FUNCTION__);
-    Serial.printf("🔊 [%s] Setting volume to: %d\n", __PRETTY_FUNCTION__, playerVolume);
-    player.setVolume(playerVolume);
-    Serial.printf("▶️ [%s] Playing sound index: %d, duration: %d ms\n", __PRETTY_FUNCTION__, soundIndex, trackDurationMs);
-    player.playSound(soundIndex, trackDurationMs, "TEST_SOUND");
+      // Increment soundIndex and reset if it exceeds maxSoundIndex
+      currentSoundIndex++;
+      if (currentSoundIndex > maxSoundIndex) {
+        currentSoundIndex = minSoundIndex;
+      }
 
-    // Increment soundIndex and reset if it exceeds MAX_SOUND_INDEX
-    soundIndex++;
-    if (soundIndex > MAX_SOUND_INDEX) {
-      soundIndex = 1;
+      delay(20); // wait a bit so we are sure that the sound has started
     }
-
-    delay(20); // wait a bit so we are sure that the sound has started
-  }
-#endif
+  #endif
 }
