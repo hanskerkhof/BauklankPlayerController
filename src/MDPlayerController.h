@@ -12,11 +12,14 @@
 
 class MDPlayerController : public PlayerController {
 public:
+    static constexpr uint16_t MD_CMD_GAP_MS = 30;   // safe gap between commands
+
     const char* getPlayerTypeName() const override { return "MD Player"; }
     MDPlayerController(int rxPin, int txPin);
     void begin() override;
     void playSound(int track, unsigned long durationMs, const char* trackName) override;
-    void stopSound();
+    void playTrack(int track, unsigned long durationMs, const char* trackName) override;
+    void stop();
     void enableLoop() override;
     void disableLoop() override;
     void setEqualizerPreset(EqualizerPreset preset) override;
@@ -70,9 +73,39 @@ private:
     // Define DEV_TF separately as it's not part of the command enum
     static constexpr uint8_t DEV_TF = 0x02;  ///< select storage device to TF card
 
+  // --- Base opcode bridge for MD player ---
+  enum : uint8_t {
+    MDCmd_None = 0,
+    MDCmd_PlayFolderFile,
+    MDCmd_Stop,
+    MDCmd_SetSnglCycl,
+    MDCmd_Volume,
+    MDCmd_Eq
+  };
+
 protected:
-    void setPlayerVolume(uint8_t playerVolume) override;
+
+  // per-device timing (MD is quicker than DF)
+  uint16_t normalGapMs()    const override { return 80; }    // light ops
+  uint16_t afterPlayGapMs() const override { return 180; }   // play needs longer
+  bool isPlayCommand(uint8_t t) const override { return t == MDCmd_PlayFolderFile; }
+
+  // pretty debug name
+  const char* cmdName(uint8_t t) const override {
+    switch (t) {
+      case MDCmd_PlayFolderFile: return "PlayFF";
+      case MDCmd_Stop:           return "Stop";
+      case MDCmd_SetSnglCycl:    return "SetCycl";
+      case MDCmd_Volume:         return "Volume";
+      case MDCmd_Eq:             return "Eq";
+      default:                   return "MD?";
+    }
+  }
+
+  void setPlayerVolume(uint8_t playerVolume) override;
 
 private:
+//  void sendCommand(uint8_t, uint16_t, uint16_t) override {}
+  void sendCommand(uint8_t type, uint16_t a, uint16_t b) override;
 
 };

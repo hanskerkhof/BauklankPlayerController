@@ -157,14 +157,14 @@ void loop() {
 
     switch (currentState) {
       // case NOOP:
-        player.stopSound();
+        player.stop();
       //   Serial.println("State: NOOP");
       //   // Do nothing in this state, just wait
       //   break;
 
       case PLAY_TRACK:
         Serial.println("\nState: PLAY_TRACK\n\n");
-        player.stopSound();
+        player.stop();
         player.setVolume(100);
         player.playSound(soundIndex, trackDurationMs, "TRACK_NAME");
         Serial.printf("Playing sound index: %d, duration: %d ms\n", soundIndex, trackDurationMs);
@@ -185,13 +185,13 @@ void loop() {
 
       case STOP_TRACK:
         Serial.printf("\nState: STOP_TRACK\n\n");
-        player.stopSound();
+        player.stop();
         // Serial.println("Stopped playing sound");
         break;
 
 //      case STOP_TRACK2:
 //        Serial.println("State: STOP_TRACK2");
-//        player.stopSound();
+//        player.stop();
 //        Serial.println("Stopped playing sound (alternative method)");
 //        // You can add additional actions here, such as:
 //        // - Resetting some variables

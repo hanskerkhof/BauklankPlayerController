@@ -4,6 +4,17 @@
 
 using CMD = MDPlayerController::MDPlayerCommand;
 
+static void dumpHex(const int8_t* data, size_t len) {
+  Serial.print(F("[WIRE:MD] "));
+  for (size_t i = 0; i < len; ++i) {
+    uint8_t b = (uint8_t)data[i];
+    if (b < 16) Serial.print('0');
+    Serial.print(b, HEX);
+    if (i + 1 < len) Serial.print(' ');
+  }
+  Serial.println();
+}
+
 #if defined(ESP32)
   MDPlayerController::MDPlayerController(int rxPin, int txPin)
       : mySerial(2)  // Using UART2 on ESP32
@@ -69,23 +80,22 @@ if(debug) Serial.printf("  Selecting TF card\n");
 }
 
 void MDPlayerController::enableLoop() {
+//if(debug) Serial.println(F("MDPlayerController: Enabling loop"));
 
-if(debug) Serial.println(F("MDPlayerController: Enabling loop"));
-
-    mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);  // select the TF card
+  executePlayerCommandBase(MDCmd_SetSnglCycl, 1);  // (use 1 if your module expects it)
+//    mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);  // select the TF card
     isLooping = true;
 }
 
 void MDPlayerController::disableLoop() {
-
-// TODO Only print this when `DebugLevel::COMMANDS` is set
-if(debug) Serial.println(F("DYPlayerController: Disabling loop"));
-
-    mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);  // select the TF card
-    isLooping = false;
+  if(debug) Serial.println(F("DYPlayerController: Disabling loop"));
+  executePlayerCommandBase(MDCmd_SetSnglCycl, 0);  // (use 0 if distinct)
+//  mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);  // select the TF card
+  isLooping = false;
 }
 
-void MDPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
+// TODO Only print this when `DebugLevel::COMMANDS` is set
+void MDPlayerController::playTrack(int track, unsigned long durationMs, const char* trackName) {
     uint16_t trackNumber = track;
     uint8_t _folder, _track;
     decodeFolderAndTrack(trackNumber, _folder, _track);
@@ -94,29 +104,29 @@ void MDPlayerController::playSound(int track, unsigned long durationMs, const ch
     // Call base class for setting status, duration and trackName
     PlayerController::playSoundSetStatus(track, durationMs, trackName);
 
-    DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::PLAYBACK, "  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
+//    DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::PLAYBACK, "  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
     if(debug) Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
-//    DEBUG_PRINT(DebugLevel::COMMANDS, "  ▶️ %s - track: %u (Dec)", __PRETTY_FUNCTION__, track);
 
-    mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
-
-//    playSound(track, durationMs);
+    executePlayerCommandBase(MDCmd_PlayFolderFile, parameter);
+//    mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
 }
 
-void MDPlayerController::stopSound() {
+void MDPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
+  Serial.printf("  !! Warning: DYPlayerController::playSound will be deprecated in v3. Use playTrack instead.\n");
+  playTrack(track, durationMs, trackName);
+}
 
-// TODO Only print this when `DebugLevel::COMMANDS` is set
-if(debug) Serial.printf("      %s - mdPlayerCommand(CMD::STOP_PLAY, 0)\n", __PRETTY_FUNCTION__);
-
-    mdPlayerCommand(CMD::STOP_PLAY, 0);
-
-    // Call base class for setting status
-    PlayerController::stopSoundSetStatus();
+void MDPlayerController::stop() {
+  // TODO Only print this when `DebugLevel::COMMANDS` is set
+  if(debug) Serial.printf("      %s - mdPlayerCommand(CMD::STOP_PLAY, 0)\n", __PRETTY_FUNCTION__);
+  executePlayerCommandBase(MDCmd_Stop);
+//  mdPlayerCommand(CMD::STOP_PLAY, 0);
+  // Call base class for setting status
+  PlayerController::stopSoundSetStatus();
 }
 
 void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) {
     //    unsigned long startTime = millis();  // Start timing
-    delay(20);
     int8_t frame[8] = { 0 };
     frame[0] = 0x7e;                // starting byte
     frame[1] = 0xff;                // version
@@ -128,94 +138,96 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
     frame[6] = (int8_t)(dat);       // data low byte
     frame[7] = 0xef;                // ending byte
 
+    dumpHex(frame, sizeof(frame));   // <--- NEW: see the exact bytes
+
     for (uint8_t i = 0; i < 8; i++) {
         #if defined(ESP32)
             mySerial.write(frame[i]);
         #elif defined(ESP8266)
             mySoftwareSerial.write(frame[i]);
         #endif
-//        mySoftwareSerial.write(frame[i]);
     }
-    delay(20);
-    //    unsigned long endTime = millis();  // End timing
-    //    unsigned long duration = endTime - startTime;  // Calculate duration
-    //    // Print the duration
-    //    if(debug) Serial.printf("mdPlayerCommand execution time: %lu ms\n", duration);
 }
 
-
-/**
- * @brief Sets the volume of the MD Player.
- *
- * This method sets the volume of the MD Player to the specified level. It checks if the new volume
- * is different from the last set volume to avoid unnecessary commands.
- *
- * @param playerVolume The volume level to set. Should be a value between 0 (mute) and 30 (max volume).
- *
- * @details
- * - If the new volume is different from the last set volume:
- *   - It sends a SET_VOLUME command to the MD Player with the new volume.
- *   - Updates the lastSetPlayerVolume to the new value.
- *   - If debug is enabled, it logs the volume change.
- * - If the new volume is the same as the last set volume:
- *   - It does nothing to avoid unnecessary commands.
- *   - If debug is enabled, it logs that the volume was already set to this value.
- *
- * @note This method uses the mdPlayerCommand function to send the SET_VOLUME command to the player.
- *
- * @see mdPlayerCommand
- */
  void MDPlayerController::setPlayerVolume(uint8_t playerVolume) {
-    if (playerVolume != lastSetPlayerVolume) {
-        mdPlayerCommand(SET_VOLUME, playerVolume);
-        lastSetPlayerVolume = playerVolume;
-
-        if(debug) Serial.printf("  🔊 %s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
-
-    } else {
-
-// TODO Only print this when `DebugLevel::COMMANDS` is set
-if(debug) Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
-
-    }
+  if (playerVolume > 30) playerVolume = 30;
+  if (playerVolume == lastSetPlayerVolume) return;
+  lastSetPlayerVolume = playerVolume;
+  executePlayerCommandBase(MDCmd_Volume, playerVolume);
+  //    if (playerVolume != lastSetPlayerVolume) {
+  //        mdPlayerCommand(SET_VOLUME, playerVolume);
+  //        lastSetPlayerVolume = playerVolume;
+  ////         if(debug) Serial.printf("  🔊 %s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
+  //    } else {
+  //      // TODO Only print this when `DebugLevel::COMMANDS` is set
+  ////       if(debug) Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
+  //    }
 }
+
 
 void MDPlayerController::setEqualizerPreset(EqualizerPreset preset) {
-    uint8_t mdPreset;
-    switch (preset) {
-        case EqualizerPreset::NORMAL:
-            mdPreset = 0;
-            break;
-        case EqualizerPreset::POP:
-            mdPreset = 1;
-            break;
-        case EqualizerPreset::ROCK:
-            mdPreset = 2;
-            break;
-        case EqualizerPreset::JAZZ:
-            mdPreset = 3;
-            break;
-        case EqualizerPreset::CLASSIC:
-            mdPreset = 4;
-            break;
-        case EqualizerPreset::BASS:
-            mdPreset = 5;
-            break;
-        default:
-            mdPreset = 0; // Default to NORMAL if an unknown preset is passed
-            break;
-    }
+  uint8_t mdPreset = 0;
+  switch (preset) {
+    case EqualizerPreset::POP:     mdPreset = 1; break;
+    case EqualizerPreset::ROCK:    mdPreset = 2; break;
+    case EqualizerPreset::JAZZ:    mdPreset = 3; break;
+    case EqualizerPreset::CLASSIC: mdPreset = 4; break;
+    case EqualizerPreset::BASS:    mdPreset = 5; break;
+    default:                       mdPreset = 0; break;
+  }
+  executePlayerCommandBase(MDCmd_Eq, mdPreset);
 
-    mdPlayerCommand(SET_EQUALIZER, mdPreset);
-
-// TODO Only print this when `DebugLevel::COMMANDS` is set
-if(debug) Serial.printf("MDPlayer: Set equalizer preset to %d\n", static_cast<int>(preset));
-
-    // call base class for status
-    PlayerController::setEqualizerPreset(preset);
+  // call base class for status
+  PlayerController::setEqualizerPreset(preset);
 }
+
+//void MDPlayerController::setEqualizerPreset(EqualizerPreset preset) {
+//    uint8_t mdPreset;
+//    switch (preset) {
+//        case EqualizerPreset::NORMAL:
+//            mdPreset = 0;
+//            break;
+//        case EqualizerPreset::POP:
+//            mdPreset = 1;
+//            break;
+//        case EqualizerPreset::ROCK:
+//            mdPreset = 2;
+//            break;
+//        case EqualizerPreset::JAZZ:
+//            mdPreset = 3;
+//            break;
+//        case EqualizerPreset::CLASSIC:
+//            mdPreset = 4;
+//            break;
+//        case EqualizerPreset::BASS:
+//            mdPreset = 5;
+//            break;
+//        default:
+//            mdPreset = 0; // Default to NORMAL if an unknown preset is passed
+//            break;
+//    }
+//
+//    mdPlayerCommand(SET_EQUALIZER, mdPreset);
+//
+//// TODO Only print this when `DebugLevel::COMMANDS` is set
+//if(debug) Serial.printf("MDPlayer: Set equalizer preset to %d\n", static_cast<int>(preset));
+//
+//    // call base class for status
+//    PlayerController::setEqualizerPreset(preset);
+//}
 
 void MDPlayerController::update() {
     PlayerController::update(); // Call the base class update method
     // Add any MD-specific update logic here if needed
+}
+
+void MDPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
+  switch (type) {
+    case MDCmd_PlayFolderFile: mdPlayerCommand(CMD::PLAY_FOLDER_FILE, a); break; // a = (folder<<8)|file
+    case MDCmd_Stop:           mdPlayerCommand(CMD::STOP_PLAY,        0); break;
+    case MDCmd_SetSnglCycl:    mdPlayerCommand(CMD::SET_SNGL_CYCL,    a); break; // if module cares (0/1)
+    case MDCmd_Volume:         mdPlayerCommand(CMD::SET_VOLUME,       a); break; // a = 0..30
+    case MDCmd_Eq:             mdPlayerCommand(CMD::SET_EQUALIZER,    a); break; // a = 0..5
+    default: break;
+  }
 }

@@ -15,11 +15,16 @@ void NOPlayerController::enableLoop() {
 void NOPlayerController::disableLoop() {
 }
 
-void NOPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
+void NOPlayerController::playTrack(int track, unsigned long durationMs, const char* trackName) {
     PlayerController::playSoundSetStatus(track, durationMs, trackName);
 }
 
-void NOPlayerController::stopSound() {
+void NOPlayerController::playSound(int track, unsigned long durationMs, const char* trackName) {
+    Serial.printf("  !! Warning: NOPlayerController::playSound will be deprecated in v3. Use playTrack instead.\n");
+    PlayerController::playSoundSetStatus(track, durationMs, trackName);
+}
+
+void NOPlayerController::stop() {
   PlayerController::stopSoundSetStatus();
 }
 

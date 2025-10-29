@@ -1,5 +1,6 @@
+// BauklankPlayerController.h
 #pragma once
-// #pragma GCC system_header
+#include <Arduino.h>
 
 #if __has_include("debug.h")
     #include "debug.h"
@@ -19,23 +20,23 @@
 
 class PlayerController {
 public:
-    bool debug = false;
+  bool debug = false;
 
-    static const uint8_t MIN_VOLUME = 0;
-    static const uint8_t MAX_VOLUME = 30;
-    static const int DEFAULT_VOLUME = 15;
-    static const int MIN_FADE_DURATION_MS = 1400;  // Add this line
+  static const uint8_t MIN_VOLUME = 0;
+  static const uint8_t MAX_VOLUME = 30;
+  static const int DEFAULT_VOLUME = 15;
+  static const int MIN_FADE_DURATION_MS = 1400;
 
-    enum PlayerStatus {
-        STATUS_STOPPED,
-        STATUS_PLAYING
-    };
+  enum PlayerStatus {
+      STATUS_STOPPED,
+      STATUS_PLAYING
+  };
 
-    enum class FadeDirection {
-        NONE,
-        IN,
-        OUT
-    };
+  enum class FadeDirection {
+      NONE,
+      IN,
+      OUT
+  };
 
 //| const             | value  |
 //| :---------------- | :----- |
@@ -70,64 +71,74 @@ public:
 // EQ_CLASSIC
 // EQ_BASS
 
-    enum class EqualizerPreset : uint8_t {
-        NORMAL = 0,
-        POP = 1,
-        ROCK = 2,
-        JAZZ = 3,
-        CLASSIC = 4,
-        BASS = 5
-    };
+  enum class EqualizerPreset : uint8_t {
+      NORMAL = 0,
+      POP = 1,
+      ROCK = 2,
+      JAZZ = 3,
+      CLASSIC = 4,
+      BASS = 5
+  };
 
-    // Simple debug setter
-    void setDebug(bool enabled) {
-        debug = enabled;
-    }
+  // Simple debug setter
+  void setDebug(bool enabled) {
+      debug = enabled;
+  }
 
-    // Helpers
-    const char* playerStatusToString(PlayerStatus status) {
-        switch (status) {
-            case STATUS_STOPPED: return "STATUS_STOPPED";
-            case STATUS_PLAYING: return "STATUS_PLAYING";
-            default: return "UNKNOWN_STATUS";
-        }
-    }
+  // Helpers
+  const char* playerStatusToString(PlayerStatus status) {
+      switch (status) {
+          case STATUS_STOPPED: return "STATUS_STOPPED";
+          case STATUS_PLAYING: return "STATUS_PLAYING";
+          default: return "UNKNOWN_STATUS";
+      }
+  }
 
-    virtual const char* getPlayerTypeName() const { return "Unknown"; }
+  virtual const char* getPlayerTypeName() const { return "Unknown"; }
 
-    virtual void begin() = 0;
-    virtual void setVolume(int volume);
-    int getVolume();
+  virtual void begin() = 0;
+  virtual void setVolume(int volume);
+  int getVolume();
 
-    virtual void fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs, const char* trackName);
-    virtual void fadeOut(int durationMs, int targetVolume, bool stopSound);
-    virtual void fadeTo(int durationMs,int targetVolume);
-    void stopFade(bool stopSound = false);
-    bool isFading();
-    bool isFadingIn();
-    bool isFadingOut();
+  virtual void fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs, const char* trackName);
+  virtual void fadeOut(int durationMs, int targetVolume, bool stopSound);
+  virtual void fadeTo(int durationMs,int targetVolume);
+  void stopFade(bool stopSound = false);
+  bool isFading();
+  bool isFadingIn();
+  bool isFadingOut();
 
-    virtual void playSound(int track, unsigned long durationMs, const char* trackName);
+  virtual void playSound(int track, unsigned long durationMs, const char* trackName);
+  virtual void playTrack(int track, unsigned long durationMs, const char* trackName);
 
-    virtual void playSoundSetStatus(int track, unsigned long durationMs, const char* trackName);
-    virtual void stopSoundSetStatus();
-    virtual void stopSound();
+  virtual void playSoundSetStatus(int track, unsigned long durationMs, const char* trackName);
+  virtual void stopSoundSetStatus();
+  virtual void stop();
 
-    virtual void enableLoop() = 0;
-    virtual void disableLoop() = 0;
+  virtual void enableLoop() = 0;
+  virtual void disableLoop() = 0;
 
-    virtual void setEqualizerPreset(EqualizerPreset preset) = 0;
-    static const char* equalizerPresetToString(EqualizerPreset preset);
+  virtual void setEqualizerPreset(EqualizerPreset preset) = 0;
+  static const char* equalizerPresetToString(EqualizerPreset preset);
 
-    void displayPlayerStatusBox();
-    void displayVolumeProgressBar();
-    void displayEqualizerSettings();
+  void displayPlayerStatusBox();
+  void displayVolumeProgressBar();
+  void displayEqualizerSettings();
 
-//    void playSoundRandom(int minTrack, int maxTrack);
-    void update();
-    bool isSoundPlaying() const { return playerStatus == STATUS_PLAYING; }
-    const char* createProgressBar(int value, int maxLength);
+  //    void playSoundRandom(int minTrack, int maxTrack);
+  void update();
+  bool isSoundPlaying() const { return playerStatus == STATUS_PLAYING; }
+  const char* createProgressBar(int value, int maxLength);
 
+  inline void executePlayerCommandBase(uint8_t type, uint16_t a = 0, uint16_t b = 0) {
+    // last-wins pending slot
+    _pendingType = type;
+    _pendingA    = a;
+    _pendingB    = b;
+    // No logging or flushing here (ISR-safe). Actual send happens in update().
+  }
+
+  void flushPendingIfReadyBase_();
 
 protected:
     bool isLooping = false;
@@ -153,7 +164,46 @@ protected:
     int fadeIntervalMs = DEFAULT_FADE_INTERVAL_MS;
     bool shouldStopAfterFade = false;
 
+    // Derived classes must provide these:
+    virtual void sendCommand(uint8_t type, uint16_t a, uint16_t b) = 0;
+    virtual bool     isPlayCommand(uint8_t type) const { return false; }
+    virtual uint16_t normalGapMs()    const = 0;
+    virtual uint16_t afterPlayGapMs() const { return normalGapMs(); }
+
+    // Pretty name for debug (derived overrides)
+    virtual const char* cmdName(uint8_t type) const { return "?"; }
+
+//    // Call this instead of sending immediately: last call wins
+//    inline void executePlayerCommandBase(uint8_t type, uint16_t a = 0, uint16_t b = 0) {
+//        _pendingCmd.type  = type;
+//        _pendingCmd.a     = a;
+//        _pendingCmd.b     = b;
+//        _pendingCmd.valid = true;
+//        // Optionally try an immediate flush if the gap already elapsed:
+//        flushPendingIfReadyBase();
+//    }
+    // ^^^ v2
+
 private:
+  // debug throttle/coalesce
+  uint8_t  _dbgLastType { 0 };
+  uint16_t _dbgLastA    { 0 };
+  uint32_t _dbgNextLogMs{ 0 };
+  static constexpr uint16_t DBG_POST_EVERY_MS = 80;
+
+  // pending slot (last-wins)
+  uint8_t  _pendingType { 0 };
+  uint16_t _pendingA    { 0 };
+  uint16_t _pendingB    { 0 };
+
+  // spacing
+  uint32_t _nextReadyMs { 0 };
+
+  // debug helpers (declared; defined in .cpp)
+  void debugPost_(uint8_t type, uint16_t a, uint16_t b, uint32_t now);
+  void debugSend_(uint8_t type, uint16_t a, uint16_t b, uint32_t now, uint16_t gapApplied) const;
+
+
     const char* fadeDirectionToString(FadeDirection direction);
     unsigned long fadeStartTime;
     int currentTrack;
@@ -163,4 +213,10 @@ private:
     int bassLevel = 50;  // Example default value
     int midLevel = 50;   // Example default value
     int trebleLevel = 50; // Example default value
+
+    // --- v2
+//    CmdEnvelope _pendingCmd{};
+//    uint32_t    _lastSentMs{0};
+//    uint32_t    _nextReadyMs{0};
+    // ^^^ v2
 };

@@ -150,13 +150,13 @@ void loop() {
 
       case STOP_TRACK:
         Serial.println("State: STOP_TRACK");
-        player.stopSound();
+        player.stop();
         Serial.println("Stopped playing sound");
         break;
 
 //      case STOP_TRACK2:
 //        Serial.println("State: STOP_TRACK2");
-//        player.stopSound();
+//        player.stop();
 //        Serial.println("Stopped playing sound (alternative method)");
 //        // You can add additional actions here, such as:
 //        // - Resetting some variables

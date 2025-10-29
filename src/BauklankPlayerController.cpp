@@ -1,4 +1,5 @@
 // BauklankPlayerController.cpp
+#include <Arduino.h>
 #include "BauklankPlayerController.h"
 #include "DebugLevelManager.h"
 
@@ -11,26 +12,38 @@
 unsigned long lastPeriodicUpdate = 0;
 unsigned long PLAYER_STATUS_INTERVAL_MS = 5000;
 
-/**
- * @brief Initializes the PlayerController base class.
- *
- * This method performs the basic initialization of the player controller:
- * - Sets up debug levels for command and playback monitoring
- * - Initializes player status to stopped
- * - Sets volume to default level
- * - Displays initial status message
- *
- * @note This method should be called by derived classes at the start of their own
- *       begin() implementation using PlayerController::begin()
- *
- * Example usage in derived class:
- * @code
- * void DerivedPlayer::begin() {
- *     PlayerController::begin();  // Call base class initialization first
- *     // Additional derived class initialization...
- * }
- * @endcode
- */
+// 2) Base: simplify printf formats (safer on ESP8266)
+void PlayerController::debugPost_(uint8_t type, uint16_t a, uint16_t b, uint32_t now) {
+  // Keep it simple: avoid %-width and long UTF-8 in flood paths
+  Serial.print(F("[CMD] post ")); Serial.print(cmdName(type));
+  Serial.print(F(" a=")); Serial.print(a);
+  Serial.print(F(" t=")); Serial.print(now);
+  Serial.print(F(" nextReady=")); Serial.println(_nextReadyMs);
+}
+
+void PlayerController::debugSend_(uint8_t type, uint16_t a, uint16_t b,
+                                  uint32_t now, uint16_t gap) const {
+  Serial.print(F("[CMD] send ")); Serial.print(cmdName(type));
+  Serial.print(F(" a=")); Serial.print(a);
+  Serial.print(F(" t=")); Serial.print(now);
+  Serial.print(F(" gap=")); Serial.print(gap);
+  Serial.print(F(" next=")); Serial.println(now + gap);
+}
+
+//void PlayerController::debugPost_(uint8_t type, uint16_t a, uint16_t b, uint32_t now) {
+//  // Example: only when commands debug is on
+//  // if (!DebugLevelManager::enabled(DebugLevel::COMMANDS)) return;
+//  Serial.printf("[CMD] post  %-10s a=%u b=%u t=%lu nextReady=%lu (dt=%ld)\n",
+//                cmdName(type), a, b, now, _nextReadyMs, (long)(_nextReadyMs - now));
+//}
+//
+//void PlayerController::debugSend_(uint8_t type, uint16_t a, uint16_t b, uint32_t now, uint16_t gap) const {
+//  // if (!DebugLevelManager::enabled(DebugLevel::COMMANDS)) return;
+//  Serial.printf("[CMD] send  %-10s a=%u b=%u t=%lu gap=%u next=%lu\n",
+//                cmdName(type), a, b, now, gap, now + gap);
+//}
+
+
 void PlayerController::begin() {
     // initialize the debug level
     // CURRENT_DEBUG_LEVEL = DebugLevel::COMMANDS | DebugLevel::PLAYBACK;
@@ -138,7 +151,7 @@ void PlayerController::decodeFolderAndTrack(uint16_t trackNumber, uint8_t& folde
 
 void PlayerController::playSoundSetStatus(int track, unsigned long durationMs, const char* trackName) {
 
-  DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::PLAYBACK, "  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
+  //  DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::PLAYBACK, "  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
 
   playerStatus = STATUS_PLAYING;
   currentTrack = track;
@@ -149,7 +162,7 @@ void PlayerController::playSoundSetStatus(int track, unsigned long durationMs, c
   } else {
       playDuration = 0; // or some default value, or keep the previous value
 
-      DEBUG_PRINT(DebugLevel::COMMANDS, "⚠️ %s - Warning: durationMs is 0 or negative (%lu). Using default duration.", __PRETTY_FUNCTION__, durationMs);
+//      DEBUG_PRINT(DebugLevel::COMMANDS, "⚠️ %s - Warning: durationMs is 0 or negative (%lu). Using default duration.", __PRETTY_FUNCTION__, durationMs);
 
   }
   if (trackName != nullptr && trackName[0] != '\0') {
@@ -161,7 +174,7 @@ void PlayerController::playSoundSetStatus(int track, unsigned long durationMs, c
 
   }
 
-  DEBUG_PRINT(DebugLevel::COMMANDS, "▶️ %s - Playing track: %d (%s), duration: %d ms, startTime: %lu, endTime: %lu", __PRETTY_FUNCTION__, track, currentTrackName, durationMs, playStartTime, playStartTime + playDuration);
+//  DEBUG_PRINT(DebugLevel::COMMANDS, "▶️ %s - Playing track: %d (%s), duration: %d ms, startTime: %lu, endTime: %lu", __PRETTY_FUNCTION__, track, currentTrackName, durationMs, playStartTime, playStartTime + playDuration);
 
   displayPlayerStatusBox();
 }
@@ -219,7 +232,7 @@ void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack, u
 
     // Stop any playing sound....
     if(isSoundPlaying()) {
-        stopSound();
+        stop();
 //    } else {
 //        Serial.printf("  !-> No sound was playing\n");
     }
@@ -380,7 +393,7 @@ void PlayerController::stopFade(bool stopSound) {
     if (fadeDirection != FadeDirection::NONE) {
         // If we're fading out and stopSound is true, stop the playback
         if (fadeDirection == FadeDirection::OUT && stopSound) {
-            this->stopSound();
+            this->stop();
         }
 
         // Reset fade-related variables
@@ -566,6 +579,24 @@ void PlayerController::displayPlayerStatusBox() {
   Serial.println(F("    └─────────────────────────────────────────────────────────────┘"));
 }
 
+void PlayerController::flushPendingIfReadyBase_() {
+  const uint32_t now = millis();
+  if (_pendingType == 0) return;
+  if ((int32_t)(now - _nextReadyMs) < 0) return;
+
+  const uint8_t  t = _pendingType;
+  const uint16_t a = _pendingA;
+  const uint16_t b = _pendingB;
+  _pendingType = 0;  // clear before sending
+
+  sendCommand(t, a, b);
+
+  const uint16_t gap = isPlayCommand(t) ? afterPlayGapMs() : normalGapMs();
+  _nextReadyMs = now + gap;
+
+  debugSend_(t, a, b, now, gap);
+}
+
 void PlayerController::update() {
     unsigned long currentTime = millis();
     // Define a static variable lastPlayerStatus to store the last player status
@@ -629,7 +660,7 @@ void PlayerController::update() {
 
               DEBUG_PRINT(DebugLevel::FADE, "📈⏹️ FADE - Stopping sound after fade");
 
-              stopSound();
+              stop();
               shouldStopAfterFade = false; // Reset the flag
             }
 
@@ -659,4 +690,8 @@ void PlayerController::update() {
       lastPlayerStatus = playerStatus;
     }
     #endif
+
+    flushPendingIfReadyBase_();
+
 }
+
