@@ -2,6 +2,27 @@
 #pragma once
 #include <Arduino.h>
 
+#if defined(NO_PLAYER_ENABLED)
+// Provide only the bare minimum of PlayerController so NOPlayerController can inherit
+
+//class PlayerController {
+//public:
+//  virtual const char* getPlayerTypeName() const { return "NoPlayerBase"; }
+//  virtual void begin() {}
+//  virtual void setVolume(int) {}
+//  virtual void playSound(int, unsigned long, const char*) {}
+//  virtual void playTrack(int, unsigned long, const char*) {}
+//  virtual void stop() {}
+//  virtual void enableLoop() {}
+//  virtual void disableLoop() {}
+//  // and tiny stubs for types/enums you use:
+//  enum class EqualizerPreset : uint8_t { NORMAL = 0 };
+//  void update() {}
+//};
+
+#else
+
+
 #if __has_include("debug.h")
     #include "debug.h"
 #endif
@@ -220,3 +241,4 @@ private:
 //    uint32_t    _nextReadyMs{0};
     // ^^^ v2
 };
+#endif
