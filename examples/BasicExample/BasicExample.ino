@@ -2,7 +2,8 @@
 // #define MD_PLAYER_ENABLED
 // #define DY_PLAYER_ENABLED
 // #define DF_PLAYER_ENABLED
-#define AK_PLAYER_ENABLED
+// #define AK_PLAYER_ENABLED
+#define XY_PLAYER_ENABLED
 
 #include <BauklankPlayerController.h>
 
@@ -20,6 +21,9 @@
 // #define DF_PLAYER_RX_PIN D1 // Green -> TX on player - Third pin from VCC
 // #define DF_PLAYER_TX_PIN D2 // Blue -> RX on player - Pin next to VCC
 
+#define XY_PLAYER_RX_PIN D1 // Green -> TX on player - ???
+#define XY_PLAYER_TX_PIN D2 // Blue -> RX on player - ???
+
 #ifdef MD_PLAYER_ENABLED
   #include <MDPlayerController.h>
   MDPlayerController player(MD_PLAYER_RX_PIN, MD_PLAYER_TX_PIN);
@@ -35,16 +39,19 @@
 #elif defined(AK_PLAYER_ENABLED)
   #include <AKPlayerController.h>
   AKPlayerController player;
+#elif defined(XY_PLAYER_ENABLED)
+  #include <XYPlayerController.h>
+  XYPlayerController player(XY_PLAYER_RX_PIN, XY_PLAYER_TX_PIN);
 #endif
 
-int minSoundIndex = 45;
-int maxSoundIndex = 45;
+int minSoundIndex = 200;
+int maxSoundIndex = 213;
 int currentSoundIndex = minSoundIndex;
-uint8_t playerVolume = 25;
+uint8_t playerVolume = 25; // 0-30
 
 // Define minutes and seconds
-const uint8_t minutes = 15;
-const uint8_t seconds = 27;
+const uint8_t minutes = 0;
+const uint8_t seconds = 10;
 static const uint32_t trackDurationMs = (minutes * 60 + seconds) * 1000;
 
 void setup() {
@@ -69,7 +76,7 @@ void loop() {
       // Serial.printf("🔊 [%s] Setting volume to: %d\n", __PRETTY_FUNCTION__, playerVolume);
       // player.setVolume(playerVolume);
       Serial.printf("▶️ [%s] Playing sound currentSoundIndex: %d, duration: %d ms\n", __PRETTY_FUNCTION__, currentSoundIndex, trackDurationMs);
-      player.playSound(currentSoundIndex, trackDurationMs, "TEST_SOUND");
+      player.playTrack(currentSoundIndex, trackDurationMs, "TEST_SOUND");
 
       // Increment soundIndex and reset if it exceeds maxSoundIndex
       currentSoundIndex++;
