@@ -44,10 +44,12 @@
   XYPlayerController player(XY_PLAYER_RX_PIN, XY_PLAYER_TX_PIN);
 #endif
 
-int minSoundIndex = 200;
-int maxSoundIndex = 213;
+// int minSoundIndex = 200;
+// int maxSoundIndex = 213;
+int minSoundIndex = 1;
+int maxSoundIndex = 51;
 int currentSoundIndex = minSoundIndex;
-uint8_t playerVolume = 25; // 0-30
+uint8_t playerVolume = 30; // 0-30
 
 // Define minutes and seconds
 const uint8_t minutes = 0;
