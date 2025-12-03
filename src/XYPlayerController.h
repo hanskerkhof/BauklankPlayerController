@@ -46,7 +46,7 @@ public:
     void enableLoop() override;
     void disableLoop() override;
     void setEqualizerPreset(EqualizerPreset preset) override;
-    const char* getPlayerTypeName() const override { return "XY-V17B"; }
+    const char* getPlayerTypeName() const override { return "XY Player"; }
     //    void update() override;
     void update();
 

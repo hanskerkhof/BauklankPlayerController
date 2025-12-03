@@ -53,7 +53,7 @@ uint8_t playerVolume = 30; // 0-30
 
 // Define minutes and seconds
 const uint8_t minutes = 0;
-const uint8_t seconds = 10;
+const uint8_t seconds = 4;
 static const uint32_t trackDurationMs = (minutes * 60 + seconds) * 1000;
 
 void setup() {
@@ -66,6 +66,7 @@ void setup() {
   Serial.println("Compiled " __DATE__ " of " __TIME__);
   Serial.println(F("--------------------------------------------------------------------------------------------"));
   player.begin();
+  delay(100);
   Serial.println(F("--------------------------------------------------------------------------------------------"));
 }
 
