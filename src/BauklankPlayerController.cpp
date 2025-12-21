@@ -316,6 +316,9 @@ void PlayerController::fadeOut(int durationMs, int targetVolume = 0, bool stopSo
 }
 
 void PlayerController::fadeTo(int durationMs, int targetVolume) {
+    // Do not stop sound when doing fadeTo 0
+    shouldStopAfterFade = false;
+
     // Ensure duration is not less than the minimum
     durationMs = max(durationMs, MIN_FADE_DURATION_MS);
 
