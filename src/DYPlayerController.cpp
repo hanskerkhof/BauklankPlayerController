@@ -96,13 +96,18 @@ void DYPlayerController::stop() {
   PlayerController::stopSoundSetStatus();
 }
 
-void DYPlayerController::setPlayerVolume(uint8_t v) {
-  if (v > 30) v = 30;
-  if (v == lastSetPlayerVolume) return;
-  lastSetPlayerVolume = v;
-  executePlayerCommandBase(DYCmd_Volume, v);
+void DYPlayerController::setPlayerVolume(uint8_t setPlayerVolume) {
+  if (setPlayerVolume > 30) setPlayerVolume = 30;
+  if(debug) {
+    Serial.printf("  🔊 %s - playerVolume = %d, lastSetPlayerVolume = %d the same! Volume not set!",
+      __PRETTY_FUNCTION__,
+      setPlayerVolume,
+      lastSetPlayerVolume);
+  }
+  lastSetPlayerVolume = setPlayerVolume;
+  if(debug) Serial.printf("  🔊 %s - Set DY Player volume to %d\n", __PRETTY_FUNCTION__, setPlayerVolume);
+  executePlayerCommandBase(DYCmd_Volume, setPlayerVolume);
 }
-
 
 // If you prefer to pass the exact DY enum up front:
 //void DYPlayerController::enableLoop()  { executePlayerCommandBase(DYCmd_SetCycle, (uint16_t)DY::PlayMode::RepeatOne); isLooping = true;  }
