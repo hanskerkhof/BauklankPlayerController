@@ -82,13 +82,15 @@ if(debug) Serial.printf("  Selecting TF card\n");
 void MDPlayerController::enableLoop() {
   if (debug) Serial.println(F("  🔁 MDPlayerController::enableLoop"));
 
-  mdPlayerCommand(CMD::SET_SNGL_CYCL, 1);  // (use 1 if your module expects it)
+  // YX5300: 0x19 00 00 00 EF = start single-cycle play
+  mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);
     isLooping = true;
 }
 
 void MDPlayerController::disableLoop() {
   if(debug) Serial.println(F("DYPlayerController: Disabling loop"));
-  executePlayerCommandBase(MDCmd_SetSnglCycl, 0);  // (use 0 if distinct)
+  // YX5300: 0x19 00 00 01 EF = close single-cycle play
+  executePlayerCommandBase(MDCmd_SetSnglCycl, 1);
 //  mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);  // select the TF card
   isLooping = false;
 }
@@ -104,7 +106,14 @@ void MDPlayerController::playTrack(int track, unsigned long durationMs, const ch
     PlayerController::playSoundSetStatus(track, durationMs, trackName);
 
 //    DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::PLAYBACK, "  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
+    if (debug && isLooping) {
+      Serial.printf("  🔁 %s - loop enabled, will repeat track\n", __PRETTY_FUNCTION__);
+    }
     if(debug) Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms\n", __PRETTY_FUNCTION__, track, trackName, durationMs);
+
+    if (isLooping) {
+      mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);
+    }
 
     executePlayerCommandBase(MDCmd_PlayFolderFile, parameter);
 //    mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
@@ -153,7 +162,7 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
   if (setPlayerVolume > 30) setPlayerVolume = 30;
   if (setPlayerVolume == lastSetPlayerVolume) {
     if(debug) {
-    Serial.printf("  🔊 %s - playerVolume = %d, lastSetPlayerVolume = %d the same! Volume not set!",
+    Serial.printf("  🔊 %s - playerVolume = %d, lastSetPlayerVolume = %d the same! Volume not set!\n",
       __PRETTY_FUNCTION__,
       setPlayerVolume,
       lastSetPlayerVolume);

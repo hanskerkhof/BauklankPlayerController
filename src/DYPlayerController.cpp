@@ -99,7 +99,7 @@ void DYPlayerController::stop() {
 void DYPlayerController::setPlayerVolume(uint8_t setPlayerVolume) {
   if (setPlayerVolume > 30) setPlayerVolume = 30;
   if(debug) {
-    Serial.printf("  🔊 %s - playerVolume = %d, lastSetPlayerVolume = %d the same! Volume not set!",
+    Serial.printf("  🔊 %s - playerVolume = %d, lastSetPlayerVolume = %d the same! Volume not set!\n",
       __PRETTY_FUNCTION__,
       setPlayerVolume,
       lastSetPlayerVolume);
