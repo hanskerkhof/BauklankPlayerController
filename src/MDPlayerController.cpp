@@ -80,10 +80,9 @@ if(debug) Serial.printf("  Selecting TF card\n");
 }
 
 void MDPlayerController::enableLoop() {
-//if(debug) Serial.println(F("MDPlayerController: Enabling loop"));
+  if (debug) Serial.println(F("  🔁 MDPlayerController::enableLoop"));
 
-  executePlayerCommandBase(MDCmd_SetSnglCycl, 1);  // (use 1 if your module expects it)
-//    mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);  // select the TF card
+  mdPlayerCommand(CMD::SET_SNGL_CYCL, 1);  // (use 1 if your module expects it)
     isLooping = true;
 }
 
