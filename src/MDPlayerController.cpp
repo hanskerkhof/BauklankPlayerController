@@ -106,14 +106,14 @@ void MDPlayerController::playTrack(int track, unsigned long durationMs, const ch
     PlayerController::playSoundSetStatus(track, durationMs, trackName);
 
 //    DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::PLAYBACK, "  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
-    if (debug && isLooping) {
-      Serial.printf("  🔁 %s - loop enabled, will repeat track\n", __PRETTY_FUNCTION__);
-    }
+//    if (debug && isLooping) {
+//      Serial.printf("  🔁 %s - loop enabled, will repeat track\n", __PRETTY_FUNCTION__);
+//    }
     if(debug) Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms\n", __PRETTY_FUNCTION__, track, trackName, durationMs);
 
-    if (isLooping) {
-      mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);
-    }
+//    if (isLooping) {
+//      mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);
+//    }
 
     executePlayerCommandBase(MDCmd_PlayFolderFile, parameter);
 //    mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
@@ -158,8 +158,8 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
 }
 
  void MDPlayerController::setPlayerVolume(uint8_t setPlayerVolume) {
-
   if (setPlayerVolume > 30) setPlayerVolume = 30;
+
   if (setPlayerVolume == lastSetPlayerVolume) {
     if(debug) {
     Serial.printf("  🔊 %s - playerVolume = %d, lastSetPlayerVolume = %d the same! Volume not set!\n",
@@ -167,19 +167,11 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
       setPlayerVolume,
       lastSetPlayerVolume);
     }
-//    return;
+    return;
   }
   lastSetPlayerVolume = setPlayerVolume;
   if(debug) Serial.printf("  🔊 %s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, setPlayerVolume);
   executePlayerCommandBase(MDCmd_Volume, setPlayerVolume);
-  //    if (playerVolume != lastSetPlayerVolume) {
-  //        mdPlayerCommand(SET_VOLUME, playerVolume);
-  //        lastSetPlayerVolume = playerVolume;
-  //         if(debug) Serial.printf("  🔊 %s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, playerVolume);
-  //    } else {
-  //      // TODO Only print this when `DebugLevel::COMMANDS` is set
-  ////       if(debug) Serial.printf("%s - Volume already set to %d\n", __PRETTY_FUNCTION__, playerVolume);
-  //    }
 }
 
 
