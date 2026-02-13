@@ -223,12 +223,12 @@ void PlayerController::setEqualizerPreset(EqualizerPreset preset) {
     }
 }
 
-void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack, unsigned long trackDurationMs, const char* trackName) {
+void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrackIndex, unsigned long trackDurationMs, const char* trackName) {
     // Ensure duration is not less than the minimum
     durationMs = max(durationMs, MIN_FADE_DURATION_MS);
 
     DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::FADE, "📈 %s - Fade in with track and duration requested: fade duration %d ms, target volume %d, track %d, track duration %lu ms, track name: %s",
-            __PRETTY_FUNCTION__, durationMs, targetVolume, playTrack, trackDurationMs, trackName);
+            __PRETTY_FUNCTION__, durationMs, targetVolume, playTrackIndex, trackDurationMs, trackName);
 
     // Stop any playing sound....
     if(isSoundPlaying()) {
@@ -241,7 +241,7 @@ void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrack, u
 
     // Start playing the track with the specified duration and name
     // Call the virtual function to play the track
-    playSound(playTrack, trackDurationMs, trackName);
+    playTrack(playTrackIndex, trackDurationMs, trackName);
 //    Serial.printf("  !-> After playing the track\n");
     delay(60); // give some time to start the sound
 //    Serial.printf("  !-> After the delay sound should have started\n");
@@ -697,4 +697,3 @@ void PlayerController::update() {
     flushPendingIfReadyBase_();
 
 }
-
