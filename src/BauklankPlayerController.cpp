@@ -243,7 +243,7 @@ void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrackInd
     // Call the virtual function to play the track
     playTrack(playTrackIndex, trackDurationMs, trackName);
 //    Serial.printf("  !-> After playing the track\n");
-    delay(20); // give some time to start the sound
+    delay(60); // give some time to start the sound
 //    Serial.printf("  !-> After the delay sound should have started\n");
 
      DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::FADE, "%s - FadeDirection: %d", __PRETTY_FUNCTION__, fadeDirection);
