@@ -60,7 +60,8 @@ uint32_t _plan_currentMillis;
 uint32_t _plan_targetNextMessageTime;
 const uint32_t LOOP_TICK_INTERVAL_MS = 1000;
 
-int VOLUME_ANALOG_NUM_SAMPLES = 10;
+int VOLUME_ANALOG_NUM_SAMPLES = 8;
+const unsigned long VOLUME_ANALOG_DEBOUNCE_INTERVAL_MS = 50;
 int initialVolume = 19;
 AnalogReader analogReader(
   /*pin=*/A0,
@@ -68,7 +69,7 @@ AnalogReader analogReader(
   /*maxValue=*/30,
   /*readInterval=*/3,
   /*numSamples=*/VOLUME_ANALOG_NUM_SAMPLES,
-  /*debounceInterval=*/50  // Must be greater than 40 to work because the player.setVolume command takes a minimum of 40ms
+  /*debounceInterval=*/VOLUME_ANALOG_DEBOUNCE_INTERVAL_MS  // Must be >40ms because player.setVolume takes at least ~40ms
 );
 
 void onAnalogValueChanged(int newValue) {
