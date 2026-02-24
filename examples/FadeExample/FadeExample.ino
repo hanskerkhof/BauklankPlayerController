@@ -1,5 +1,3 @@
-#include "AnalogReader.h"
-
 #define MD_PLAYER_ENABLED
 // #define DY_PLAYER_ENABLED
 // #define DF_PLAYER_ENABLED
@@ -48,6 +46,7 @@ const unsigned long STATE_DURATION = 4000;  // 8 seconds per state
 #define MAX_SOUND_INDEX 35
 int soundIndex = 35;
 uint8_t playerVolume;
+const uint8_t demoPlayerVolume = 19;
 // Define minutes and seconds
 const uint8_t minutes = 2;
 const uint8_t seconds = 3;
@@ -60,26 +59,6 @@ uint32_t _plan_currentMillis;
 uint32_t _plan_targetNextMessageTime;
 const uint32_t LOOP_TICK_INTERVAL_MS = 1000;
 
-int VOLUME_ANALOG_NUM_SAMPLES = 8;
-const unsigned long VOLUME_ANALOG_DEBOUNCE_INTERVAL_MS = 50;
-int initialVolume = 19;
-AnalogReader analogReader(
-  /*pin=*/A0,
-  /*minValue=*/0,
-  /*maxValue=*/30,
-  /*readInterval=*/3,
-  /*numSamples=*/VOLUME_ANALOG_NUM_SAMPLES,
-  /*debounceInterval=*/VOLUME_ANALOG_DEBOUNCE_INTERVAL_MS  // Must be >40ms because player.setVolume takes at least ~40ms
-);
-
-void onAnalogValueChanged(int newValue) {
-  Serial.printf("🔊 [%s] Analog value changed to: %d\n", __PRETTY_FUNCTION__, newValue);
-  playerVolume = newValue;
-  player.setVolume(playerVolume);
-  // Add your logic here to handle the new value
-  // Here you can update your volume or perform any other action
-}
-
 void setup() {
   Serial.begin(115200);
   Serial.println();
@@ -89,13 +68,10 @@ void setup() {
   Serial.println(__FILE__);
   Serial.println("Compiled " __DATE__ " of " __TIME__);
   Serial.println(F("--------------------------------------------------------------------------------------------"));
-  // Start the player before the analogReader.
+  // Initialize player with a fixed demo volume.
   player.begin();
-  // No need to set volume here, as it's already set by the callback
-  // player.setVolume(volume);
-  Serial.println(F("--------------------------------------------------------------------------------------------"));
-  analogReader.setCallback(onAnalogValueChanged);
-  analogReader.begin();
+  playerVolume = demoPlayerVolume;
+  player.setVolume(playerVolume);
   Serial.println(F("--------------------------------------------------------------------------------------------"));
 
   //  player.playSound(soundIndex, trackDurationMs);
@@ -107,7 +83,6 @@ void loop() {
   _plan_currentMillis = millis();
 
   player.update();
-  analogReader.update();
 
   //  // Sound playing logic
   //  if (!player.isSoundPlaying()) {
