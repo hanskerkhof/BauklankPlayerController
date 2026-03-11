@@ -4,11 +4,7 @@
 #include "BauklankPlayerController.h"
 #include "DFRobotDFPlayerMini.h"
 
-#if defined(ESP32)
-    #include <HardwareSerial.h>
-#else
-    #include <SoftwareSerial.h>
-#endif
+#include <SoftwareSerial.h>
 
 class DFRobotPlayerController : public PlayerController {
 public:
@@ -22,6 +18,7 @@ public:
     #endif
 
     virtual void begin() override;
+    void beginFastTxOnly();
     virtual void playSound(int track, unsigned long durationMs, const char* trackName);
     virtual void playTrack(int track, unsigned long durationMs, const char* trackName);
     virtual void stop() override;
@@ -58,13 +55,11 @@ private:
     enum : uint8_t { DFCmd_None=0, DFCmd_PlayTrack, DFCmd_Stop, DFCmd_LoopOn, DFCmd_LoopOff, DFCmd_Volume, DFCmd_Eq };
     void     sendCommand(uint8_t type, uint16_t a, uint16_t b) override;
 
-    #if defined(ESP32)
-        HardwareSerial mySerial;
-    #else
-        SoftwareSerial mySoftwareSerial;
-    #endif
+    int serialRxPin;
+    int serialTxPin;
+
+    SoftwareSerial mySoftwareSerial;
 
     DFRobotDFPlayerMini myDFPlayer;
     uint8_t lastSetPlayerVolume = 255; // Invalid value to force first update
 };
-

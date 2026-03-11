@@ -5,50 +5,145 @@
 
 #if defined(ESP32)
     DFRobotPlayerController::DFRobotPlayerController(int rxPin, int txPin, int uart)
-        : mySerial(uart) {
-        mySerial.begin(9600, SERIAL_8N1, rxPin, txPin);
+        : serialRxPin(rxPin), serialTxPin(txPin), mySoftwareSerial(rxPin, txPin) {
+        (void)uart;
     }
 #else
     DFRobotPlayerController::DFRobotPlayerController(int rxPin, int txPin)
-        : mySoftwareSerial(rxPin, txPin) {
+        : serialRxPin(rxPin), serialTxPin(txPin), mySoftwareSerial(rxPin, txPin) {
     }
 #endif
+
+void DFRobotPlayerController::beginFastTxOnly() {
+  PlayerController::begin();
+
+  Serial.println(F("Initializing DFPlayer TX-only fast path ..."));
+  Serial.printf("[DFPlayer] serial wiring rx=%d tx=%d\n", serialRxPin, serialTxPin);
+
+#if defined(ESP32)
+  if (serialRxPin >= 0) {
+    Serial.println(F("[DFPlayer] beginFastTxOnly requested with RX enabled, falling back to normal begin()"));
+    begin();
+    return;
+  }
+
+  mySoftwareSerial.begin(9600, SWSERIAL_8N1, serialRxPin, serialTxPin, false);
+  if (!mySoftwareSerial) {
+    Serial.printf("[DFPlayer] invalid software serial pin configuration rx=%d tx=%d\n", serialRxPin, serialTxPin);
+    return;
+  }
+
+  Serial.println(F("[DFPlayer] fast profile=NOACK+NORESET"));
+  if (!myDFPlayer.begin(mySoftwareSerial, /*isAck=*/false, /*doReset=*/false)) {
+    Serial.println(F("[DFPlayer] fast init failed, falling back to normal begin()"));
+    begin();
+    return;
+  }
+#else
+  begin();
+  return;
+#endif
+
+  Serial.println(F("DFPlayer Mini online (fast TX-only)."));
+  delay(20);
+  myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
+  delay(DF_CMD_GAP_MS);
+}
 
 
 void DFRobotPlayerController::begin() {
   PlayerController::begin();
 
   Serial.println(F("Initializing DFPlayer ... (May take 3~5 seconds)"));
+  Serial.printf("[DFPlayer] serial wiring rx=%d tx=%d\n", serialRxPin, serialTxPin);
 
   // DFPlayer cold-boot grace time (first power-up can be slow)
   //  - 300–800 ms is often enough; 1500–2500 ms is safest with some cards.
   //  delay(1500);
 
-  const uint8_t maxAttempts = 6;     // ~3 s total @ 500 ms backoff
-  uint8_t attempt = 0;
   bool ok = false;
+  uint8_t totalAttempt = 0;
 
-  while (attempt < maxAttempts && !ok) {
-    attempt++;
+#if defined(ESP32)
+  struct BeginProfile {
+    bool isAck;
+    bool doReset;
+    uint8_t attempts;
+    const char* label;
+  };
 
-    // Start/ensure the serial port is alive each attempt
-    #if defined(ESP32)
-      // mySerial already begun in ctor; if you want, call begin() again here.
-      ok = myDFPlayer.begin(mySerial, /*isACK=*/true, /*doReset=*/true);
-    #else
-      if (!mySoftwareSerial.isListening()) {
-        mySoftwareSerial.begin(9600);
+  const bool hasRx = serialRxPin >= 0;
+  if (!hasRx) {
+    Serial.println(F("[DFPlayer] RX disabled, using TX-only software serial path"));
+  }
+
+  const BeginProfile bidirectionalProfiles[] = {
+    { true,  true,  2, "ACK+RESET"     },
+    { false, true,  2, "NOACK+RESET"   },
+    { false, false, 2, "NOACK+NORESET" },
+  };
+  const BeginProfile txOnlyProfiles[] = {
+    { false, true,  2, "NOACK+RESET"   },
+    { false, false, 2, "NOACK+NORESET" },
+  };
+
+  const BeginProfile* beginProfiles = hasRx ? bidirectionalProfiles : txOnlyProfiles;
+  const size_t beginProfileCount = hasRx
+    ? (sizeof(bidirectionalProfiles) / sizeof(bidirectionalProfiles[0]))
+    : (sizeof(txOnlyProfiles) / sizeof(txOnlyProfiles[0]));
+
+  for (size_t profileIndex = 0; profileIndex < beginProfileCount; ++profileIndex) {
+    const BeginProfile& profile = beginProfiles[profileIndex];
+    Serial.printf(
+      "[DFPlayer] begin profile=%s isAck=%s doReset=%s\n",
+      profile.label,
+      profile.isAck ? "true" : "false",
+      profile.doReset ? "true" : "false"
+    );
+
+    for (uint8_t attempt = 0; attempt < profile.attempts && !ok; ++attempt) {
+      totalAttempt++;
+      mySoftwareSerial.begin(9600, SWSERIAL_8N1, serialRxPin, serialTxPin, false);
+      if (!mySoftwareSerial) {
+        Serial.printf("[DFPlayer] invalid software serial pin configuration rx=%d tx=%d\n", serialRxPin, serialTxPin);
+        return;
       }
-                                              // Use non-ACK mode on ESP8266
-      ok = myDFPlayer.begin(mySoftwareSerial, /*isACK=*/false, /*doReset=*/true);
-    #endif
+      ok = myDFPlayer.begin(mySoftwareSerial, profile.isAck, profile.doReset);
 
-    if (!ok) {
-      // brief backoff; keep WiFi/OS happy on ESP8266
-      for (uint16_t i = 0; i < 50; ++i) { delay(10); }  // 500 ms total
-      Serial.printf("attempt: %d\n", attempt);
+      if (!ok) {
+        Serial.printf(
+          "[DFPlayer] begin failed profile=%s attempt=%u totalAttempt=%u\n",
+          profile.label,
+          attempt + 1,
+          totalAttempt
+        );
+        for (uint16_t i = 0; i < 50; ++i) { delay(10); }
+      }
+    }
+
+    if (ok) {
+      Serial.printf("[DFPlayer] begin succeeded with profile=%s\n", profile.label);
+      break;
     }
   }
+#else
+  const uint8_t maxAttempts = 6;
+
+  for (uint8_t attempt = 0; attempt < maxAttempts && !ok; ++attempt) {
+    totalAttempt++;
+
+    if (!mySoftwareSerial.isListening()) {
+      mySoftwareSerial.begin(9600);
+    }
+
+    ok = myDFPlayer.begin(mySoftwareSerial, /*isACK=*/false, /*doReset=*/true);
+
+    if (!ok) {
+      for (uint16_t i = 0; i < 50; ++i) { delay(10); }
+      Serial.printf("[DFPlayer] begin failed attempt=%u\n", totalAttempt);
+    }
+  }
+#endif
 
   if (!ok) {
     Serial.println(F("Unable to begin after retries:"));
