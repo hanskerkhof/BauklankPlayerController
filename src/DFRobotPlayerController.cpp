@@ -19,6 +19,13 @@ void DFRobotPlayerController::beginFastTxOnly() {
 
   Serial.println(F("Initializing DFPlayer TX-only fast path ..."));
   Serial.printf("[DFPlayer] serial wiring rx=%d tx=%d\n", serialRxPin, serialTxPin);
+  PlayerInitResult initResult{};
+  initResult.rxPin = (int8_t)serialRxPin;
+  initResult.txPin = (int8_t)serialTxPin;
+  initResult.attemptedAck = false;
+  initResult.finalUsedAck = false;
+  initResult.fallbackFromAckToNoAck = false;
+  initResult.finalProfile = DfInitProfile::NoAckNoReset;
 
 #if defined(ESP32)
   if (serialRxPin >= 0) {
@@ -30,6 +37,8 @@ void DFRobotPlayerController::beginFastTxOnly() {
   mySoftwareSerial.begin(9600, SWSERIAL_8N1, serialRxPin, serialTxPin, false);
   if (!mySoftwareSerial) {
     Serial.printf("[DFPlayer] invalid software serial pin configuration rx=%d tx=%d\n", serialRxPin, serialTxPin);
+    initResult.success = false;
+    emitInitResult(initResult);
     return;
   }
 
@@ -40,6 +49,9 @@ void DFRobotPlayerController::beginFastTxOnly() {
     return;
   }
 #else
+  initResult.success = false;
+  initResult.finalProfile = DfInitProfile::Unknown;
+  emitInitResult(initResult);
   begin();
   return;
 #endif
@@ -48,6 +60,8 @@ void DFRobotPlayerController::beginFastTxOnly() {
   delay(20);
   myDFPlayer.outputDevice(DFPLAYER_DEVICE_SD);
   delay(DF_CMD_GAP_MS);
+  initResult.success = true;
+  emitInitResult(initResult);
 }
 
 
@@ -63,6 +77,10 @@ void DFRobotPlayerController::begin() {
 
   bool ok = false;
   uint8_t totalAttempt = 0;
+  PlayerInitResult initResult{};
+  initResult.rxPin = (int8_t)serialRxPin;
+  initResult.txPin = (int8_t)serialTxPin;
+  initResult.finalProfile = DfInitProfile::Unknown;
 
 #if defined(ESP32)
   struct BeginProfile {
@@ -91,9 +109,13 @@ void DFRobotPlayerController::begin() {
   const size_t beginProfileCount = hasRx
     ? (sizeof(bidirectionalProfiles) / sizeof(bidirectionalProfiles[0]))
     : (sizeof(txOnlyProfiles) / sizeof(txOnlyProfiles[0]));
+  const BeginProfile* successfulProfile = nullptr;
 
   for (size_t profileIndex = 0; profileIndex < beginProfileCount; ++profileIndex) {
     const BeginProfile& profile = beginProfiles[profileIndex];
+    if (profile.isAck) {
+      initResult.attemptedAck = true;
+    }
     Serial.printf(
       "[DFPlayer] begin profile=%s isAck=%s doReset=%s\n",
       profile.label,
@@ -106,6 +128,9 @@ void DFRobotPlayerController::begin() {
       mySoftwareSerial.begin(9600, SWSERIAL_8N1, serialRxPin, serialTxPin, false);
       if (!mySoftwareSerial) {
         Serial.printf("[DFPlayer] invalid software serial pin configuration rx=%d tx=%d\n", serialRxPin, serialTxPin);
+        initResult.success = false;
+        initResult.finalProfile = DfInitProfile::Unknown;
+        emitInitResult(initResult);
         return;
       }
       ok = myDFPlayer.begin(mySoftwareSerial, profile.isAck, profile.doReset);
@@ -122,9 +147,21 @@ void DFRobotPlayerController::begin() {
     }
 
     if (ok) {
+      successfulProfile = &profile;
       Serial.printf("[DFPlayer] begin succeeded with profile=%s\n", profile.label);
       break;
     }
+  }
+
+  if (successfulProfile) {
+    if (successfulProfile->isAck && successfulProfile->doReset) {
+      initResult.finalProfile = DfInitProfile::AckReset;
+    } else if (!successfulProfile->isAck && successfulProfile->doReset) {
+      initResult.finalProfile = DfInitProfile::NoAckReset;
+    } else if (!successfulProfile->isAck && !successfulProfile->doReset) {
+      initResult.finalProfile = DfInitProfile::NoAckNoReset;
+    }
+    initResult.finalUsedAck = successfulProfile->isAck;
   }
 #else
   const uint8_t maxAttempts = 6;
@@ -149,6 +186,9 @@ void DFRobotPlayerController::begin() {
     Serial.println(F("Unable to begin after retries:"));
     Serial.println(F("1. Recheck RX/TX wiring (DF TX -> MCU RX, DF RX -> MCU TX)."));
     Serial.println(F("2. Ensure SD card is inserted and files are valid."));
+    initResult.success = false;
+    initResult.fallbackFromAckToNoAck = false;
+    emitInitResult(initResult);
     // Don’t hard-spin: just return and let the rest of the app keep running.
     return;
   }
@@ -180,6 +220,10 @@ void DFRobotPlayerController::begin() {
   delay(DF_CMD_GAP_MS);
   myDFPlayer.setTimeOut(1000);
   delay(DF_CMD_GAP_MS);
+
+  initResult.success = true;
+  initResult.fallbackFromAckToNoAck = initResult.attemptedAck && !initResult.finalUsedAck;
+  emitInitResult(initResult);
 }
 
 void DFRobotPlayerController::playTrack(int track, unsigned long durationMs, const char* trackName) {

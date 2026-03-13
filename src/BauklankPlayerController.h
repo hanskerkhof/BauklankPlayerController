@@ -39,6 +39,25 @@
 
 #include <stdint.h>
 
+enum class DfInitProfile : uint8_t {
+  Unknown = 0,
+  AckReset,
+  NoAckReset,
+  NoAckNoReset
+};
+
+struct PlayerInitResult {
+  bool success = false;
+  bool attemptedAck = false;
+  bool finalUsedAck = false;
+  bool fallbackFromAckToNoAck = false;
+  int8_t rxPin = -1;
+  int8_t txPin = -1;
+  DfInitProfile finalProfile = DfInitProfile::Unknown;
+};
+
+using InitResultCallback = void (*)(const PlayerInitResult&, void* userCtx);
+
 class PlayerController {
 public:
   bool debug = false;
@@ -105,6 +124,14 @@ public:
   void setDebug(bool enabled) {
       debug = enabled;
   }
+
+  void setInitResultCallback(InitResultCallback cb, void* userCtx) {
+    initResultCallback = cb;
+    initResultCallbackCtx = userCtx;
+  }
+
+  bool hasLastInitResult() const { return hasInitResult; }
+  const PlayerInitResult& getLastInitResult() const { return lastInitResult; }
 
   // Helpers
   const char* playerStatusToString(PlayerStatus status) {
@@ -194,6 +221,14 @@ protected:
     // Pretty name for debug (derived overrides)
     virtual const char* cmdName(uint8_t type) const { return "?"; }
 
+    void emitInitResult(const PlayerInitResult& result) {
+      lastInitResult = result;
+      hasInitResult = true;
+      if (initResultCallback) {
+        initResultCallback(result, initResultCallbackCtx);
+      }
+    }
+
 //    // Call this instead of sending immediately: last call wins
 //    inline void executePlayerCommandBase(uint8_t type, uint16_t a = 0, uint16_t b = 0) {
 //        _pendingCmd.type  = type;
@@ -234,6 +269,11 @@ private:
     int bassLevel = 50;  // Example default value
     int midLevel = 50;   // Example default value
     int trebleLevel = 50; // Example default value
+
+    InitResultCallback initResultCallback = nullptr;
+    void* initResultCallbackCtx = nullptr;
+    PlayerInitResult lastInitResult{};
+    bool hasInitResult = false;
 
     // --- v2
 //    CmdEnvelope _pendingCmd{};
