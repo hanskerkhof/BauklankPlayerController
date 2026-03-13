@@ -4,8 +4,8 @@
 
 #if defined(ESP32)
 DYPlayerController::DYPlayerController(int rxPin, int txPin, int uart)
-    : mySerial(uart), myDYPlayer(&mySerial) {
-    mySerial.begin(9600, SERIAL_8N1, rxPin, txPin);
+    : mySoftwareSerial(rxPin, txPin), myDYPlayer(&mySoftwareSerial) {
+    (void)uart;
 }
 #else
 DYPlayerController::DYPlayerController(int rxPin, int txPin)
@@ -29,11 +29,7 @@ void DYPlayerController::DYPlayerController::begin() {
     PlayerController::begin();
 
     DEBUG_PRINT(DebugLevel::SETUP, "%s - mySoftwareSerial.begin(%d)", __PRETTY_FUNCTION__, 9600);
-
-    #if !defined(ESP32)
-        DEBUG_PRINT(DebugLevel::SETUP, "%s - mySoftwareSerial.begin(%d)", __PRETTY_FUNCTION__, 9600);
-        mySoftwareSerial.begin(9600);
-    #endif
+    mySoftwareSerial.begin(9600);
 
     delay(300);  // Give some time for the serial connection to establish
     int slp = 30;

@@ -1,12 +1,7 @@
 #pragma once
 
 #include "BauklankPlayerController.h"
-
-#if defined(ESP32)
-    #include <HardwareSerial.h>
-#else
-    #include <SoftwareSerial.h>
-#endif
+#include <SoftwareSerial.h>
 
 #include <DYPlayerArduino.h>
 
@@ -19,11 +14,7 @@ private:
     int8_t lastSetPlayerVolume = -1;
     uint8_t currentVolume;
 
-    #if defined(ESP32)
-        HardwareSerial mySerial;
-    #else
-        SoftwareSerial mySoftwareSerial;
-    #endif
+    SoftwareSerial mySoftwareSerial;
 
 protected:
   // --- Base opcode bridge for DY player ---

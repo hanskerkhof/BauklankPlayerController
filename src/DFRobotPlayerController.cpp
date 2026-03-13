@@ -164,21 +164,78 @@ void DFRobotPlayerController::begin() {
     initResult.finalUsedAck = successfulProfile->isAck;
   }
 #else
-  const uint8_t maxAttempts = 6;
+  struct BeginProfile {
+    bool isAck;
+    bool doReset;
+    uint8_t attempts;
+    const char* label;
+  };
 
-  for (uint8_t attempt = 0; attempt < maxAttempts && !ok; ++attempt) {
-    totalAttempt++;
+  const bool hasRx = serialRxPin >= 0;
+  if (!hasRx) {
+    Serial.println(F("[DFPlayer] RX disabled, using TX-only software serial path"));
+  }
 
-    if (!mySoftwareSerial.isListening()) {
+  const BeginProfile bidirectionalProfiles[] = {
+    { true,  true,  2, "ACK+RESET"     },
+    { false, true,  2, "NOACK+RESET"   },
+    { false, false, 2, "NOACK+NORESET" },
+  };
+  const BeginProfile txOnlyProfiles[] = {
+    { false, true,  2, "NOACK+RESET"   },
+    { false, false, 2, "NOACK+NORESET" },
+  };
+
+  const BeginProfile* beginProfiles = hasRx ? bidirectionalProfiles : txOnlyProfiles;
+  const size_t beginProfileCount = hasRx
+    ? (sizeof(bidirectionalProfiles) / sizeof(bidirectionalProfiles[0]))
+    : (sizeof(txOnlyProfiles) / sizeof(txOnlyProfiles[0]));
+  const BeginProfile* successfulProfile = nullptr;
+
+  for (size_t profileIndex = 0; profileIndex < beginProfileCount; ++profileIndex) {
+    const BeginProfile& profile = beginProfiles[profileIndex];
+    if (profile.isAck) {
+      initResult.attemptedAck = true;
+    }
+    Serial.printf(
+      "[DFPlayer] begin profile=%s isAck=%s doReset=%s\n",
+      profile.label,
+      profile.isAck ? "true" : "false",
+      profile.doReset ? "true" : "false"
+    );
+
+    for (uint8_t attempt = 0; attempt < profile.attempts && !ok; ++attempt) {
+      totalAttempt++;
       mySoftwareSerial.begin(9600);
+      ok = myDFPlayer.begin(mySoftwareSerial, profile.isAck, profile.doReset);
+
+      if (!ok) {
+        Serial.printf(
+          "[DFPlayer] begin failed profile=%s attempt=%u totalAttempt=%u\n",
+          profile.label,
+          attempt + 1,
+          totalAttempt
+        );
+        for (uint16_t i = 0; i < 50; ++i) { delay(10); }
+      }
     }
 
-    ok = myDFPlayer.begin(mySoftwareSerial, /*isACK=*/false, /*doReset=*/true);
-
-    if (!ok) {
-      for (uint16_t i = 0; i < 50; ++i) { delay(10); }
-      Serial.printf("[DFPlayer] begin failed attempt=%u\n", totalAttempt);
+    if (ok) {
+      successfulProfile = &profile;
+      Serial.printf("[DFPlayer] begin succeeded with profile=%s\n", profile.label);
+      break;
     }
+  }
+
+  if (successfulProfile) {
+    if (successfulProfile->isAck && successfulProfile->doReset) {
+      initResult.finalProfile = DfInitProfile::AckReset;
+    } else if (!successfulProfile->isAck && successfulProfile->doReset) {
+      initResult.finalProfile = DfInitProfile::NoAckReset;
+    } else if (!successfulProfile->isAck && !successfulProfile->doReset) {
+      initResult.finalProfile = DfInitProfile::NoAckNoReset;
+    }
+    initResult.finalUsedAck = successfulProfile->isAck;
   }
 #endif
 
