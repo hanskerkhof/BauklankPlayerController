@@ -6,6 +6,8 @@
   #if defined(ARDUINO)
     #warning "This file targets ESP32 only; building empty TU on this board."
   #endif
+#elif defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
+  // ESP32-C3/C6/H2 have no SDMMC peripheral — AK player not supported; compile as empty TU
 #else
 
 #include <Arduino.h>
