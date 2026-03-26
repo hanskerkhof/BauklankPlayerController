@@ -61,7 +61,7 @@ void DYPlayerController::playTrack(int track, unsigned long durationMs, const ch
   char path[11];
   sprintf(path, "/%05d.mp3", track);
 
-  Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
+  Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms\n", __PRETTY_FUNCTION__, track, trackName, durationMs);
 
   myDYPlayer.playSpecifiedDevicePath(DY::Device::Sd, path);
   // Call the base class for status, duration and trackName

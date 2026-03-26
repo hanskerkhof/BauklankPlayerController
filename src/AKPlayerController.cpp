@@ -98,7 +98,7 @@ void AKPlayerController::disableLoop() { isLooping = false; executePlayerCommand
 //}
 
 void AKPlayerController::playTrack(int track, unsigned long durationMs, const char* trackName) {
-  Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
+  Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms\n", __PRETTY_FUNCTION__, track, trackName, durationMs);
 
   // queue logical command; base will execute with pacing from update()
   executePlayerCommandBase(AKCmd_PlayTrack, (uint16_t)track);
