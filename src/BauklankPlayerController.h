@@ -176,6 +176,7 @@ public:
   //    void playSoundRandom(int minTrack, int maxTrack);
   void update();
   bool isSoundPlaying() const { return playerStatus == STATUS_PLAYING; }
+  int getCurrentTrack() const { return currentTrack; }
   const char* createProgressBar(int value, int maxLength);
 
   inline void executePlayerCommandBase(uint8_t type, uint16_t a = 0, uint16_t b = 0) {
