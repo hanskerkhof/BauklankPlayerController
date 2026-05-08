@@ -146,7 +146,9 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
     frame[6] = (int8_t)(dat);       // data low byte
     frame[7] = 0xef;                // ending byte
 
-    dumpHex(frame, sizeof(frame));   // <--- NEW: see the exact bytes
+    if (debug) {
+      dumpHex(frame, sizeof(frame));   // <--- NEW: see the exact bytes
+    }
 
     for (uint8_t i = 0; i < 8; i++) {
         #if defined(ESP32)

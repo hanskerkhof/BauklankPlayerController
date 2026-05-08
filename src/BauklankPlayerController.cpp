@@ -14,6 +14,7 @@ unsigned long PLAYER_STATUS_INTERVAL_MS = 5000;
 
 // 2) Base: simplify printf formats (safer on ESP8266)
 void PlayerController::debugPost_(uint8_t type, uint16_t a, uint16_t b, uint32_t now) {
+  if (!debug) return;
   // Keep it simple: avoid %-width and long UTF-8 in flood paths
   Serial.print(F("[CMD] post ")); Serial.print(cmdName(type));
   Serial.print(F(" a=")); Serial.print(a);
@@ -23,6 +24,7 @@ void PlayerController::debugPost_(uint8_t type, uint16_t a, uint16_t b, uint32_t
 
 void PlayerController::debugSend_(uint8_t type, uint16_t a, uint16_t b,
                                   uint32_t now, uint16_t gap) const {
+  if (!debug) return;
   Serial.print(F("[CMD] send ")); Serial.print(cmdName(type));
   Serial.print(F(" a=")); Serial.print(a);
   Serial.print(F(" t=")); Serial.print(now);
