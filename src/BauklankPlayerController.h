@@ -64,7 +64,7 @@ public:
 
   static const uint8_t MIN_VOLUME = 0;
   static const uint8_t MAX_VOLUME = 30;
-  static const int DEFAULT_VOLUME = 15;
+  // static const int DEFAULT_VOLUME = 15;
   static const int MIN_FADE_DURATION_MS = 1400;
 
   enum PlayerStatus {

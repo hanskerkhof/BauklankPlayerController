@@ -60,7 +60,7 @@ void PlayerController::begin() {
 
   // Reset to initial state
   playerStatus = STATUS_STOPPED;
-  currentVolume = DEFAULT_VOLUME;
+  // currentVolume = DEFAULT_VOLUME;
 
   // Display initial status
   if ((CURRENT_DEBUG_LEVEL & DebugLevel::UPDATE) != DebugLevel::NONE) {

@@ -34,7 +34,7 @@ void XYPlayerController::begin() {
     }
 
     // Optionally set some defaults: volume, EQ, loop mode
-    setPlayerVolume(DEFAULT_VOLUME);
+    // setPlayerVolume(DEFAULT_VOLUME);
     setEqualizerPreset(EqualizerPreset::NORMAL);
     disableLoop();  // default: single-stop
 }
