@@ -63,7 +63,7 @@ void DYPlayerController::playTrack(int track, unsigned long durationMs, const ch
 
   Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms\n", __PRETTY_FUNCTION__, track, trackName, durationMs);
 
-  myDYPlayer.playSpecifiedDevicePath(DY::Device::Sd, path);
+  executePlayerCommandNowBase(DYCmd_PlayTrack, (uint16_t)track);
   // Call the base class for status, duration and trackName
   PlayerController::playSoundSetStatus(track, durationMs, trackName);
 }
@@ -72,16 +72,7 @@ void DYPlayerController::playSound(int track, unsigned long durationMs, const ch
   Serial.printf("  !! Warning: DYPlayerController::playSound will be deprecated in v3. Use playTrack instead.\n");
   playTrack(track, durationMs, trackName);
 
-  // Create the path for the track
-  char path[11];
-  sprintf(path, "/%05d.mp3", track);
-
 //  DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::PLAYBACK, "  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms", __PRETTY_FUNCTION__, track, trackName, durationMs);
-
-  executePlayerCommandBase(DYCmd_PlayTrack, (uint16_t)track);
-  //  myDYPlayer.playSpecifiedDevicePath(DY::Device::Sd, path);
-  // Call the base class for status, duration and trackName
-  PlayerController::playSoundSetStatus(track, durationMs, trackName);
 }
 
 void DYPlayerController::stop() {
@@ -105,7 +96,7 @@ void DYPlayerController::setPlayerVolume(uint8_t setPlayerVolume) {
   }
   lastSetPlayerVolume = setPlayerVolume;
   if(debug) Serial.printf("  🔊 %s - Set DY Player volume to %d\n", __PRETTY_FUNCTION__, setPlayerVolume);
-  executePlayerCommandBase(DYCmd_Volume, setPlayerVolume);
+  executePlayerCommandNowBase(DYCmd_Volume, setPlayerVolume);
 }
 
 // If you prefer to pass the exact DY enum up front:
@@ -144,7 +135,7 @@ void DYPlayerController::setEqualizerPreset(EqualizerPreset preset) {
     case EqualizerPreset::BASS:    eq = 0; break; // map to Normal (DY lacks Bass)
     default:                       eq = 0; break;
   }
-  executePlayerCommandBase(DYCmd_Eq, eq);
+  executePlayerCommandNowBase(DYCmd_Eq, eq);
   PlayerController::setEqualizerPreset(preset);
 }
 

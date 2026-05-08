@@ -600,6 +600,28 @@ void PlayerController::flushPendingIfReadyBase_() {
   debugSend_(t, a, b, now, gap);
 }
 
+void PlayerController::executePlayerCommandNowBase(uint8_t type, uint16_t a, uint16_t b) {
+  // Drain any previously queued command first to preserve wire-order semantics.
+  while (_pendingType != 0) {
+    flushPendingIfReadyBase_();
+    if (_pendingType != 0) {
+      delay(1);
+    }
+  }
+
+  // Respect command pacing gap for direct deterministic send.
+  while ((int32_t)(millis() - _nextReadyMs) < 0) {
+    delay(1);
+  }
+
+  const uint32_t now = millis();
+  sendCommand(type, a, b);
+
+  const uint16_t gap = isPlayCommand(type) ? afterPlayGapMs() : normalGapMs();
+  _nextReadyMs = now + gap;
+  debugSend_(type, a, b, now, gap);
+}
+
 void PlayerController::update() {
     unsigned long currentTime = millis();
     // Define a static variable lastPlayerStatus to store the last player status

@@ -100,8 +100,7 @@ void AKPlayerController::disableLoop() { isLooping = false; executePlayerCommand
 void AKPlayerController::playTrack(int track, unsigned long durationMs, const char* trackName) {
   Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms\n", __PRETTY_FUNCTION__, track, trackName, durationMs);
 
-  // queue logical command; base will execute with pacing from update()
-  executePlayerCommandBase(AKCmd_PlayTrack, (uint16_t)track);
+  executePlayerCommandNowBase(AKCmd_PlayTrack, (uint16_t)track);
 
 //  // Close any previously opened file
 //  // TODO Only close the file if the new file is successfully opened
@@ -145,7 +144,7 @@ void AKPlayerController::playSound(int track, unsigned long durationMs, const ch
 
 void AKPlayerController::stop() {
   if (audioFile) {
-    executePlayerCommandBase(AKCmd_Stop);
+    executePlayerCommandNowBase(AKCmd_Stop);
     // audioFile.close();
   }
 
@@ -155,8 +154,7 @@ void AKPlayerController::stop() {
 void AKPlayerController::setPlayerVolume(uint8_t v) {
   if (v > 30) v = 30;
   if (lastSetPlayerVolume == v) return;
-  lastSetPlayerVolume = v;
-  executePlayerCommandBase(AKCmd_Volume, v);
+  executePlayerCommandNowBase(AKCmd_Volume, v);
 
 
 ////  Serial.println("setPlayerVolume not implemented YET...");
@@ -325,6 +323,7 @@ void AKPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
       if (vol < 0.0f) vol = 0.0f; if (vol > 1.0f) vol = 1.0f;
       Serial.print(F("[WIRE:AK] volume(")); Serial.print(vol, 2); Serial.println(')');
       volumeStream.setVolume(vol);
+      lastSetPlayerVolume = (int8_t)constrain((int)a, (int)MIN_VOLUME, (int)MAX_VOLUME);
       break;
     }
 

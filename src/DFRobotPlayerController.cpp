@@ -294,7 +294,7 @@ void DFRobotPlayerController::playTrack(int track, unsigned long durationMs, con
     Serial.printf("  ▶️ %s - track: %u (Dec) '%s', duration: %lu ms\n", "DFRobotPlayerController::playTrack", track, trackName, durationMs);
 
     // myDFPlayer.playFolder(_folder, _track);
-    executePlayerCommandBase(DFCmd_PlayTrack, (uint16_t)track);
+    executePlayerCommandNowBase(DFCmd_PlayTrack, (uint16_t)track);
     // Call the base class for status, duration and trackName
     PlayerController::playSoundSetStatus(track, durationMs, trackName);
 }
@@ -308,7 +308,7 @@ void DFRobotPlayerController::stop() {
     Serial.printf("  ⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
     Serial.printf("      %s - myDFPlayer.stop()\n", __PRETTY_FUNCTION__);
 
-    executePlayerCommandBase(DFCmd_Stop);
+    executePlayerCommandNowBase(DFCmd_Stop);
     // myDFPlayer.stop();
 
     // Call base class for status
@@ -317,8 +317,7 @@ void DFRobotPlayerController::stop() {
 
 void DFRobotPlayerController::setPlayerVolume(uint8_t v) {
   if (v == lastSetPlayerVolume) return;
-  lastSetPlayerVolume = v;
-  executePlayerCommandBase(DFCmd_Volume, v);   // last-wins
+  executePlayerCommandNowBase(DFCmd_Volume, v);
 //    if (_playerVolume != lastSetPlayerVolume) {
 //      executePlayerCommandBase(DFCmd_Volume, _playerVolume);
 //        // myDFPlayer.volume(_playerVolume);
@@ -351,7 +350,7 @@ void DFRobotPlayerController::setEqualizerPreset(EqualizerPreset preset) {
     case EqualizerPreset::BASS:    eq = DFPLAYER_EQ_BASS;    break;
     default:                       eq = DFPLAYER_EQ_NORMAL;  break;
   }
-  executePlayerCommandBase(DFCmd_Eq, eq);
+  executePlayerCommandNowBase(DFCmd_Eq, eq);
   PlayerController::setEqualizerPreset(preset);
 }
 
@@ -389,7 +388,11 @@ void DFRobotPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t b) 
     case DFCmd_Stop:      Serial.println(F("stop()"));                                   myDFPlayer.stop();    break;
     case DFCmd_LoopOn:    Serial.println(F("loop(true)"));                                myDFPlayer.loop(true);  break;
     case DFCmd_LoopOff:   Serial.println(F("loop(false)"));                               myDFPlayer.loop(false); break;
-    case DFCmd_Volume:    Serial.print(F("volume(")); Serial.print((uint8_t)a); Serial.println(')'); myDFPlayer.volume((uint8_t)a); break;
+    case DFCmd_Volume:
+      Serial.print(F("volume(")); Serial.print((uint8_t)a); Serial.println(')');
+      myDFPlayer.volume((uint8_t)a);
+      lastSetPlayerVolume = (int8_t)constrain((int)a, (int)MIN_VOLUME, (int)MAX_VOLUME);
+      break;
     case DFCmd_Eq:        Serial.print(F("EQ(")); Serial.print((uint8_t)a); Serial.println(')');     myDFPlayer.EQ((uint8_t)a);     break;
     default:              Serial.println(F("UNKNOWN")); break;
   }

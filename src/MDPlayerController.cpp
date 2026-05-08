@@ -115,7 +115,7 @@ void MDPlayerController::playTrack(int track, unsigned long durationMs, const ch
 //      mdPlayerCommand(CMD::SET_SNGL_CYCL, 0);
 //    }
 
-    executePlayerCommandBase(MDCmd_PlayFolderFile, parameter);
+    executePlayerCommandNowBase(MDCmd_PlayFolderFile, parameter);
 //    mdPlayerCommand(CMD::PLAY_FOLDER_FILE, parameter);
 }
 
@@ -169,9 +169,8 @@ void MDPlayerController::mdPlayerCommand(MDPlayerCommand command, uint16_t dat) 
     }
     return;
   }
-  lastSetPlayerVolume = setPlayerVolume;
   if(debug) Serial.printf("  🔊 %s - Set MD Player volume to %d\n", __PRETTY_FUNCTION__, setPlayerVolume);
-  executePlayerCommandBase(MDCmd_Volume, setPlayerVolume);
+  executePlayerCommandNowBase(MDCmd_Volume, setPlayerVolume);
 }
 
 
@@ -185,7 +184,7 @@ void MDPlayerController::setEqualizerPreset(EqualizerPreset preset) {
     case EqualizerPreset::BASS:    mdPreset = 5; break;
     default:                       mdPreset = 0; break;
   }
-  executePlayerCommandBase(MDCmd_Eq, mdPreset);
+  executePlayerCommandNowBase(MDCmd_Eq, mdPreset);
 
   // call base class for status
   PlayerController::setEqualizerPreset(preset);
@@ -236,7 +235,10 @@ void MDPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
     case MDCmd_PlayFolderFile: mdPlayerCommand(CMD::PLAY_FOLDER_FILE, a); break; // a = (folder<<8)|file
     case MDCmd_Stop:           mdPlayerCommand(CMD::STOP_PLAY,        0); break;
     case MDCmd_SetSnglCycl:    mdPlayerCommand(CMD::SET_SNGL_CYCL,    a); break; // if module cares (0/1)
-    case MDCmd_Volume:         mdPlayerCommand(CMD::SET_VOLUME,       a); break; // a = 0..30
+    case MDCmd_Volume:
+      mdPlayerCommand(CMD::SET_VOLUME, a); // a = 0..30
+      lastSetPlayerVolume = static_cast<int8_t>(constrain(static_cast<int>(a), static_cast<int>(MIN_VOLUME), static_cast<int>(MAX_VOLUME)));
+      break;
     case MDCmd_Eq:             mdPlayerCommand(CMD::SET_EQUALIZER,    a); break; // a = 0..5
     default: break;
   }

@@ -188,6 +188,7 @@ public:
   }
 
   void flushPendingIfReadyBase_();
+  void executePlayerCommandNowBase(uint8_t type, uint16_t a = 0, uint16_t b = 0);
 
 protected:
     bool isLooping = false;

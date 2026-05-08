@@ -50,7 +50,7 @@ void XYPlayerController::playTrack(int track, unsigned long durationMs, const ch
                   durationMs);
 
     // For XY: 'a' = 16-bit track number, H/L encoded in sendCommand()
-    executePlayerCommandBase(XyCmd_PlayTrack, static_cast<uint16_t>(track), 0);
+    executePlayerCommandNowBase(XyCmd_PlayTrack, static_cast<uint16_t>(track), 0);
 
     // Base handles status / timers
     PlayerController::playSoundSetStatus(track, durationMs, trackName);
@@ -64,7 +64,7 @@ void XYPlayerController::playSound(int track, unsigned long durationMs, const ch
 void XYPlayerController::stop() {
     Serial.printf("  ⏹️ %s - Stopping sound\n", __PRETTY_FUNCTION__);
 
-    executePlayerCommandBase(XyCmd_Stop);
+    executePlayerCommandNowBase(XyCmd_Stop);
 
     // Update base state
     PlayerController::stopSoundSetStatus();
@@ -73,9 +73,7 @@ void XYPlayerController::stop() {
 void XYPlayerController::setPlayerVolume(uint8_t v) {
     v = constrain(v, MIN_VOLUME, MAX_VOLUME);
     if (v == _lastSetPlayerVolume) return;
-    _lastSetPlayerVolume = v;
-
-    executePlayerCommandBase(XyCmd_Volume, v, 0);
+    executePlayerCommandNowBase(XyCmd_Volume, v, 0);
 }
 
 void XYPlayerController::enableLoop() {
@@ -104,7 +102,7 @@ void XYPlayerController::setEqualizerPreset(EqualizerPreset preset) {
             break;
     }
 
-    executePlayerCommandBase(XyCmd_Eq, eqCode, 0);
+    executePlayerCommandNowBase(XyCmd_Eq, eqCode, 0);
     PlayerController::setEqualizerPreset(preset);
 }
 
@@ -181,6 +179,7 @@ void XYPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t b) {
             Serial.print(vol);
             Serial.println(F(")"));
             sendFrame(0x13, data, 1);
+            _lastSetPlayerVolume = vol;
             break;
         }
 
