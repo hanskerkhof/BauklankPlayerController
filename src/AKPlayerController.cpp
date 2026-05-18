@@ -188,15 +188,27 @@ void AKPlayerController::update() {
   // Continues audio processing
   if (audioFile && audioFile.available()) {
       if (!copier.copy()) {
-          // End of file or error
-          if (isLooping) {
-              // If looping, seek back to the beginning
-              audioFile.seek(0);
-          } else {
-              // If not looping, close the file
-              audioFile.close();
-              PlayerController::stopSoundSetStatus();
+          // copy() returned false — could be end-of-file or a transient decoder
+          // resync failure right after a track switch. Only treat it as end-of-file
+          // once the grace period has elapsed.
+          const bool inGrace = _trackJustStarted &&
+                               ((millis() - _trackStartMs) < TRACK_START_GRACE_MS);
+          if (!inGrace) {
+              if (isLooping) {
+                  // If looping, seek back to the beginning and reset decoder
+                  audioFile.seek(0);
+                  decoder.begin();
+                  _trackJustStarted = true;
+                  _trackStartMs     = millis();
+              } else {
+                  // If not looping, close the file
+                  audioFile.close();
+                  PlayerController::stopSoundSetStatus();
+              }
           }
+      } else {
+          // Successful copy — decoder is synced, exit grace period
+          _trackJustStarted = false;
       }
 
   }
@@ -308,6 +320,11 @@ void AKPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
       decoder.begin();
       copier.setCheckAvailableForWrite(false);
       copier.begin(decoder, audioFile);
+
+      // Start grace period — transient copy() failures while the HeliX decoder
+      // resyncs to the new file's MP3 frames will not be treated as end-of-file.
+      _trackJustStarted = true;
+      _trackStartMs     = millis();
 
       break;
     }
