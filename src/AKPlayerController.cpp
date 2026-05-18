@@ -306,7 +306,7 @@ void AKPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
       char path[32];
       snprintf(path, sizeof(path), "/%05u.mp3", (unsigned)a);
 
-      Serial.print(F("[WIRE:AK] open ")); Serial.println(path);
+      if (debug) { Serial.print(F("[WIRE:AK] open ")); Serial.println(path); }
 
       // Open file
       audioFile = SD_MMC.open(path);
@@ -330,13 +330,13 @@ void AKPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
     }
 
     case AKCmd_Stop:
-      Serial.println(F("[WIRE:AK] stop/close"));
+      if (debug) { Serial.println(F("[WIRE:AK] stop/close")); }
       if (audioFile) audioFile.close();
       break;
 
     case AKCmd_SetCycle:
       // a: 0 = OneOff, 1 = RepeatOne (we already set isLooping in the high-level API)
-      Serial.print(F("[WIRE:AK] setCycle(")); Serial.print(a ? 1 : 0); Serial.println(')');
+      if (debug) { Serial.print(F("[WIRE:AK] setCycle(")); Serial.print(a ? 1 : 0); Serial.println(')'); }
       // nothing to do here; loop handled in update() by seeking/closing
       break;
 
@@ -344,7 +344,7 @@ void AKPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
       // Map 0..30 → 0.0..1.0
       float vol = (float)a / 30.0f;
       if (vol < 0.0f) vol = 0.0f; if (vol > 1.0f) vol = 1.0f;
-      Serial.print(F("[WIRE:AK] volume(")); Serial.print(vol, 2); Serial.println(')');
+      if (debug) { Serial.print(F("[WIRE:AK] volume(")); Serial.print(vol, 2); Serial.println(')'); }
       volumeStream.setVolume(vol);
       lastSetPlayerVolume = (int8_t)constrain((int)a, (int)MIN_VOLUME, (int)MAX_VOLUME);
       break;
