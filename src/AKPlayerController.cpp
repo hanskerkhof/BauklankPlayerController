@@ -71,14 +71,17 @@ void AKPlayerController::begin() {
     volumeStream.begin(vcfg);
     // volumeStream.setVolume(0.7); // Initial volume at 70%
 
-    // true = 1-bit mode (uses CLK=14, CMD=15, D0=2)
-    if (!SD_MMC.begin("/sdcard", /*mode1bit*/ true)) {
-      Serial.println("SD_MMC mount failed.");
+    // SD_MMC is mounted by SdFileManager::mount() before player.begin() — do not remount here.
+    if (SD_MMC.cardType() == CARD_NONE) {
+      Serial.println("AKPlayerController: SD_MMC not mounted — skipping SD card index.");
     } else {
-      Serial.println("SD_MMC mounted.");
       File root = SD_MMC.open("/");
-      printSDCardIndex(root);
+      int fileCount = 0;
+      uint64_t totalBytes = 0;
+      printSDCardIndex(root, "", &fileCount, &totalBytes);
       root.close();
+      Serial.printf("SD card: %d file(s), %llu bytes total (%.1f MB)\n",
+                    fileCount, totalBytes, (float)totalBytes / (1024.0f * 1024.0f));
     }
 
     // Initialize the decoder
@@ -238,7 +241,7 @@ void AKPlayerController::printAudioFileInfo(const char* path) {
   file.close();
 }
 
-void AKPlayerController::printSDCardIndex(File dir, String path) {
+void AKPlayerController::printSDCardIndex(File dir, String path, int* fileCount, uint64_t* totalBytes) {
   while (true) {
     File entry = dir.openNextFile();
     if (!entry) {
@@ -266,13 +269,16 @@ void AKPlayerController::printSDCardIndex(File dir, String path) {
     if (entry.isDirectory()) {
       Serial.print("DIR : ");
       Serial.println(fullPath);
-      printSDCardIndex(entry, fullPath); // Recursive call for subdirectories
+      printSDCardIndex(entry, fullPath, fileCount, totalBytes); // Recursive call for subdirectories
     } else {
+      const uint32_t sz = entry.size();
       Serial.print("FILE: ");
       Serial.print(fullPath);
       Serial.print("\t");
-      Serial.print(entry.size(), DEC);
+      Serial.print(sz, DEC);
       Serial.println(" bytes");
+      if (fileCount)  (*fileCount)++;
+      if (totalBytes) (*totalBytes) += sz;
     }
     entry.close();
   }

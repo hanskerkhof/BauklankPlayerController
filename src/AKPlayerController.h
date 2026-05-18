@@ -32,7 +32,7 @@ public:
 
   // Print audio file info
   void printAudioFileInfo(const char* path);
-  void printSDCardIndex(File dir, String path = "");
+  void printSDCardIndex(File dir, String path = "", int* fileCount = nullptr, uint64_t* totalBytes = nullptr);
 
 protected:
   void setPlayerVolume(uint8_t playerVolume) override;
