@@ -177,6 +177,14 @@ public:
   void update();
   bool isSoundPlaying() const { return playerStatus == STATUS_PLAYING; }
   int getCurrentTrack() const { return currentTrack; }
+  // Returns elapsed playback time in ms (0 when not playing); capped at duration.
+  unsigned long getPlayElapsedMs() const {
+    if (playerStatus != STATUS_PLAYING || playStartTime == 0) return 0;
+    unsigned long elapsed = millis() - playStartTime;
+    return (playDuration > 0 && elapsed > playDuration) ? playDuration : elapsed;
+  }
+  // Returns total track duration in ms as reported by the sound library (0 if unknown).
+  unsigned long getPlayDurationMs() const { return playDuration; }
   const char* createProgressBar(int value, int maxLength);
 
   inline void executePlayerCommandBase(uint8_t type, uint16_t a = 0, uint16_t b = 0) {
