@@ -72,9 +72,8 @@ private:
   // resync do not count as end-of-file. 500 ms is enough for the HeliX decoder
   // and I2S DMA to settle after a pipeline reset.
   static constexpr uint32_t TRACK_START_GRACE_MS = 500;
-  bool     _trackJustStarted  = false;
-  uint32_t _trackStartMs      = 0;
-  bool     _mutedForSwitch    = false;
+  bool     _trackJustStarted = false;
+  uint32_t _trackStartMs     = 0;
 
   // Add AudioTools components
   // Define the chip select pin for the SD card
@@ -87,6 +86,7 @@ private:
 
   // Create an EncodedAudioStream object for MP3 decoding
   EncodedAudioStream decoder = EncodedAudioStream(&volumeStream, new MP3DecoderHelix()); // Decoding stream
+  MetaDataFilter _filter = MetaDataFilter(decoder); // Strips ID3/metadata before decoding
 
   // Create a StreamCopy object for copying data between streams
   StreamCopy copier;

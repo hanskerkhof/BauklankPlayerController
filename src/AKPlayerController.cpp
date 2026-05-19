@@ -89,9 +89,9 @@ void AKPlayerController::begin() {
     // Propagate format changes downstream so I2S reconfigures before audio arrives
     decoder.addNotifyAudioChange(i2s);
 
-    // Initialize the copier
+    // Initialize the copier — route through MetaDataFilter so ID3 tags never reach HeliX
     copier.setCheckAvailableForWrite(false);
-    copier.begin(decoder, audioFile);
+    copier.begin(_filter, audioFile);
 
 }
 
@@ -209,12 +209,8 @@ void AKPlayerController::update() {
               }
           }
       } else {
-          // Successful copy — decoder is synced, exit grace period and unmute
+          // Successful copy — decoder is synced, exit grace period
           _trackJustStarted = false;
-          if (_mutedForSwitch) {
-              i2s.setMute(false);
-              _mutedForSwitch = false;
-          }
       }
 
   }
@@ -305,11 +301,6 @@ void AKPlayerController::printSDCardIndex(File dir, String path, int* fileCount,
 void AKPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
   switch (type) {
     case AKCmd_PlayTrack: {
-      // Mute ES8388 codec DAC via I2C — deeper than VolumeStream, suppresses
-      // I2S DMA garbage and Helix decoder resync noise at the analog output.
-      i2s.setMute(true);
-      _mutedForSwitch = true;
-
       // Close current
       if (audioFile) audioFile.close();
 
@@ -330,7 +321,7 @@ void AKPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
       // Restart decoder & copier pipeline
       decoder.begin();
       copier.setCheckAvailableForWrite(false);
-      copier.begin(decoder, audioFile);
+      copier.begin(_filter, audioFile);
 
       // Start grace period — transient copy() failures while the HeliX decoder
       // resyncs to the new file's MP3 frames will not be treated as end-of-file.
