@@ -72,8 +72,9 @@ private:
   // resync do not count as end-of-file. 500 ms is enough for the HeliX decoder
   // and I2S DMA to settle after a pipeline reset.
   static constexpr uint32_t TRACK_START_GRACE_MS = 500;
-  bool     _trackJustStarted = false;
-  uint32_t _trackStartMs     = 0;
+  bool     _trackJustStarted  = false;
+  uint32_t _trackStartMs      = 0;
+  bool     _mutedForSwitch    = false;
 
   // Add AudioTools components
   // Define the chip select pin for the SD card

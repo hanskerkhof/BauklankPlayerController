@@ -86,6 +86,8 @@ void AKPlayerController::begin() {
 
     // Initialize the decoder
     decoder.begin();
+    // Propagate format changes downstream so I2S reconfigures before audio arrives
+    decoder.addNotifyAudioChange(i2s);
 
     // Initialize the copier
     copier.setCheckAvailableForWrite(false);
@@ -207,8 +209,12 @@ void AKPlayerController::update() {
               }
           }
       } else {
-          // Successful copy — decoder is synced, exit grace period
+          // Successful copy — decoder is synced, exit grace period and unmute
           _trackJustStarted = false;
+          if (_mutedForSwitch) {
+              i2s.setMute(false);
+              _mutedForSwitch = false;
+          }
       }
 
   }
@@ -299,6 +305,11 @@ void AKPlayerController::printSDCardIndex(File dir, String path, int* fileCount,
 void AKPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
   switch (type) {
     case AKCmd_PlayTrack: {
+      // Mute ES8388 codec DAC via I2C — deeper than VolumeStream, suppresses
+      // I2S DMA garbage and Helix decoder resync noise at the analog output.
+      i2s.setMute(true);
+      _mutedForSwitch = true;
+
       // Close current
       if (audioFile) audioFile.close();
 
