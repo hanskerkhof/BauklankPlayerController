@@ -25,6 +25,8 @@
 
 #include "AKPlayerController.h"
 
+bool (*AKPlayerController::_remountFn)() = nullptr;
+
 AKPlayerController::AKPlayerController() {
   // nothing to do; real init happens in begin()
 }
@@ -314,8 +316,24 @@ void AKPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t /*b*/) {
       audioFile = SD_MMC.open(path);
       if (!audioFile) {
         Serial.println(F("[WIRE:AK] open failed"));
-        // Keep status as-is; caller already set intent
-        return;
+        if (_remountFn) {
+          Serial.println(F("[WIRE:AK] attempting SD remount ..."));
+          bool ok = _remountFn();
+          Serial.printf("[WIRE:AK] remount %s\n", ok ? "ok" : "FAILED");
+          if (ok) {
+            delay(300);  // let FatFs settle after SD_MMC.begin()
+            audioFile = SD_MMC.open(path);
+            if (!audioFile) {
+              Serial.println(F("[WIRE:AK] open still failed after remount"));
+              return;
+            }
+            // fall through to pipeline init below
+          } else {
+            return;
+          }
+        } else {
+          return;
+        }
       }
 
       // Restart decoder & copier pipeline

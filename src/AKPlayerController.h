@@ -75,6 +75,14 @@ private:
   bool     _trackJustStarted = false;
   uint32_t _trackStartMs     = 0;
 
+  // Optional remount callback — called when SD_MMC.open() fails.
+  // Should remount the SD card and return true on success.
+  // Set via setRemountFn() before use; null = no remount attempted.
+  static bool (*_remountFn)();
+public:
+  static void setRemountFn(bool (*fn)()) { _remountFn = fn; }
+private:
+
   // Add AudioTools components
   // Define the chip select pin for the SD card
   const int chipSelect = PIN_AUDIO_KIT_SD_CARD_CS;
