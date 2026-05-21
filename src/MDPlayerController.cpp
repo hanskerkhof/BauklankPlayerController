@@ -16,8 +16,8 @@ static void dumpHex(const int8_t* data, size_t len) {
 }
 
 #if defined(ESP32)
-  MDPlayerController::MDPlayerController(int rxPin, int txPin)
-      : mySerial(2)  // Using UART2 on ESP32
+  MDPlayerController::MDPlayerController(int rxPin, int txPin, int uartNum)
+      : mySerial(uartNum)
   {
       mySerial.begin(9600, SERIAL_8N1, rxPin, txPin);
       delay(300);  // Give some time for the serial connection to establish

@@ -15,7 +15,11 @@ public:
     static constexpr uint16_t MD_CMD_GAP_MS = 30;   // safe gap between commands
 
     const char* getPlayerTypeName() const override { return "MD Player"; }
-    MDPlayerController(int rxPin, int txPin);
+    #if defined(ESP32)
+      MDPlayerController(int rxPin, int txPin, int uartNum = 2);
+    #else
+      MDPlayerController(int rxPin, int txPin);
+    #endif
     void begin() override;
     void playSound(int track, unsigned long durationMs, const char* trackName) override;
     void playTrack(int track, unsigned long durationMs, const char* trackName) override;
