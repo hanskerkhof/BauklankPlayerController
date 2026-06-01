@@ -96,7 +96,10 @@ void DYPlayerController::setPlayerVolume(uint8_t setPlayerVolume) {
   }
   lastSetPlayerVolume = setPlayerVolume;
   if(debug) Serial.printf("  🔊 %s - Set DY Player volume to %d\n", __PRETTY_FUNCTION__, setPlayerVolume);
-  executePlayerCommandNowBase(DYCmd_Volume, setPlayerVolume);
+  // Use non-blocking last-wins queue instead of executePlayerCommandNowBase to avoid
+  // blocking the main loop (and triggering soft WDT) when rapid volume commands arrive.
+  // Play commands drain the pending slot first, so volume-before-play ordering is preserved.
+  executePlayerCommandBase(DYCmd_Volume, setPlayerVolume);
 }
 
 // If you prefer to pass the exact DY enum up front:
