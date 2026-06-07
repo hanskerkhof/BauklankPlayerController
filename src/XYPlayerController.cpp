@@ -29,7 +29,7 @@ void XYPlayerController::begin() {
     {
         uint8_t driveData[1] = { 0x01 };  // 01 = SD
         Serial.println(F("[XY] Switch drive to SD (0x01)"));
-        sendFrame(0x0B, driveData, 1);
+        sendFrameWithAck(0x0B, driveData, 1);
         delay(50);
     }
 
@@ -135,12 +135,55 @@ void XYPlayerController::sendFrame(uint8_t cmd, const uint8_t* data, uint8_t len
     Serial.println();
 
     // Send over UART
-#if defined(ESP32)
     _serial.write(buf, totalLen);
     _serial.flush();
+}
+
+// ── ACK helpers ───────────────────────────────────────────────────────────────
+
+void XYPlayerController::drainRx() {
+    while (_serial.available()) _serial.read();
+}
+
+bool XYPlayerController::waitForAck(uint16_t timeoutMs) {
+    // The XY-V17B ACK frame starts with 0xAA 0xFF.
+    // We use a minimal 2-byte FSM — we don't validate the full checksum
+    // because the response length varies and we just need command acceptance.
+    uint32_t deadline = millis() + timeoutMs;
+    uint8_t  state    = 0;  // 0 = waiting for 0xAA, 1 = waiting for 0xFF
+
+    while ((int32_t)(millis() - deadline) < 0) {
+        if (!_serial.available()) continue;
+        uint8_t b = _serial.read();
+        if      (state == 0 && b == 0xAA) { state = 1; }
+        else if (state == 1 && b == 0xFF) { return true; }
+        else if (b == 0xAA)               { state = 1; }  // resync
+        else                               { state = 0; }
+    }
+    return false;
+}
+
+bool XYPlayerController::sendFrameWithAck(uint8_t cmd, const uint8_t* data, uint8_t len) {
+#if XY_ACK_ENABLED
+    for (uint8_t attempt = 0; attempt < XY_ACK_MAX_RETRIES; attempt++) {
+        drainRx();                       // clear stale RX bytes before send
+        sendFrame(cmd, data, len);
+        if (waitForAck(XY_ACK_TIMEOUT_MS)) {
+            if (attempt > 0) {
+                Serial.printf("[XY] ACK ok after %d retr%s\n",
+                              attempt, attempt == 1 ? "y" : "ies");
+            }
+            return true;
+        }
+        Serial.printf("[XY] no ACK (attempt %d/%d)\n",
+                      attempt + 1, XY_ACK_MAX_RETRIES);
+        delay(XY_ACK_RETRY_GAP_MS);
+    }
+    Serial.println(F("[XY] WARNING: command not ACK'd after all retries"));
+    return false;
 #else
-    _serial.write(buf, totalLen);
-    _serial.flush();
+    sendFrame(cmd, data, len);
+    return true;  // no ACK check, always optimistic
 #endif
 }
 
@@ -160,14 +203,14 @@ void XYPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t b) {
             Serial.print(F("specifySong("));
             Serial.print(track);
             Serial.println(F(")"));
-            sendFrame(0x07, data, 2);
+            sendFrameWithAck(0x07, data, 2);
             break;
         }
 
         case XyCmd_Stop: {
             // stop: cmd=0x04, len=0
             Serial.println(F("stop()"));
-            sendFrame(0x04, nullptr, 0);
+            sendFrameWithAck(0x04, nullptr, 0);
             break;
         }
 
@@ -178,7 +221,7 @@ void XYPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t b) {
             Serial.print(F("setVol("));
             Serial.print(vol);
             Serial.println(F(")"));
-            sendFrame(0x13, data, 1);
+            sendFrameWithAck(0x13, data, 1);
             _lastSetPlayerVolume = vol;
             break;
         }
@@ -188,7 +231,7 @@ void XYPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t b) {
             // Spec: 00 all-cycle, 01 single-cycle, 02 single-stop, etc.
             data[0] = 0x01;  // Single cycle current track
             Serial.println(F("loop(single track)"));
-            sendFrame(0x18, data, 1);
+            sendFrameWithAck(0x18, data, 1);
             break;
         }
 
@@ -196,7 +239,7 @@ void XYPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t b) {
             // Back to single-stop: LM=0x02
             data[0] = 0x02;  // Single stop
             Serial.println(F("loop disabled (single stop)"));
-            sendFrame(0x18, data, 1);
+            sendFrameWithAck(0x18, data, 1);
             break;
         }
 
@@ -208,7 +251,7 @@ void XYPlayerController::sendCommand(uint8_t type, uint16_t a, uint16_t b) {
             Serial.print(F("setEQ("));
             Serial.print(eqCode);
             Serial.println(F(")"));
-            sendFrame(0x1A, data, 1);
+            sendFrameWithAck(0x1A, data, 1);
             break;
         }
 

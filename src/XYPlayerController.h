@@ -27,11 +27,25 @@
   #include <SoftwareSerial.h>
 #endif
 
+// ── ACK settings ─────────────────────────────────────────────────────────────
+// Set to true to enable ACK-based retry for every command sent to the XY-V17B.
+// The module sends 0xAA 0xFF ... after each accepted command. If no ACK arrives
+// within XY_ACK_TIMEOUT_MS the command is resent up to XY_ACK_MAX_RETRIES times.
+// Disable if RX is not wired or for lower latency at the cost of reliability.
+#ifndef XY_ACK_ENABLED
+  #define XY_ACK_ENABLED true
+#endif
+
 class XYPlayerController : public PlayerController {
 public:
     // XY is pretty quick; we can be a bit tighter than DFPlayer
-    static constexpr uint16_t XY_CMD_GAP_MS      = 60;   // normal gap
+    static constexpr uint16_t XY_CMD_GAP_MS        = 60;   // normal gap
     static constexpr uint16_t XY_AFTER_PLAY_GAP_MS = 200;
+
+    // ACK / retry tuning
+    static constexpr uint16_t XY_ACK_TIMEOUT_MS  = 150;  // max wait for 0xAA 0xFF response
+    static constexpr uint8_t  XY_ACK_MAX_RETRIES = 3;    // attempts before giving up
+    static constexpr uint16_t XY_ACK_RETRY_GAP_MS = 20;  // pause between retries
 
 #if defined(ESP32)
     XYPlayerController(int rxPin, int txPin, int uart = 2);
@@ -85,6 +99,11 @@ private:
 
     void sendCommand(uint8_t type, uint16_t a, uint16_t b) override;
     void sendFrame(uint8_t cmd, const uint8_t* data, uint8_t len);
+
+    // ACK helpers — only active when XY_ACK_ENABLED == true
+    bool sendFrameWithAck(uint8_t cmd, const uint8_t* data, uint8_t len);
+    bool waitForAck(uint16_t timeoutMs);
+    void drainRx();
 
 #if defined(ESP32)
     HardwareSerial _serial;
