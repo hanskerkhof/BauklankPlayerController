@@ -73,7 +73,13 @@ void XYPlayerController::stop() {
 void XYPlayerController::setPlayerVolume(uint8_t v) {
     v = constrain(v, MIN_VOLUME, MAX_VOLUME);
     if (v == _lastSetPlayerVolume) return;
-    executePlayerCommandNowBase(XyCmd_Volume, v, 0);
+    // Use fire-and-forget (no ACK wait) for volume to avoid blocking the fade
+    // loop — each sendFrameWithAck blocks up to 150 ms, which adds 4.5 s to a
+    // 30-step 3000 ms fade. Volume steps are best-effort; a missed step only
+    // causes a minor non-linearity, not an audible glitch.
+    uint8_t data[1] = { v };
+    sendFrame(0x13, data, 1);
+    _lastSetPlayerVolume = v;
 }
 
 void XYPlayerController::enableLoop() {
