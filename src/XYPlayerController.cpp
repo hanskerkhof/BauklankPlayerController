@@ -171,6 +171,13 @@ bool XYPlayerController::waitForAck(uint16_t timeoutMs) {
 
 bool XYPlayerController::sendFrameWithAck(uint8_t cmd, const uint8_t* data, uint8_t len) {
 #if XY_ACK_ENABLED
+    // NOTE: this can run inside the ESP-NOW receive callback (SYS context on
+    // ESP8266) — e.g. a `cmd;stop`/`cmd;ota` message routes here via
+    // player.stop(). In that context Arduino delay()/yield() call esp_yield(),
+    // which is illegal and crashes with Exception (9) (LoadStoreAlignmentCause).
+    // With a player attached the first attempt ACKs and the retry gap is never
+    // reached; with no/unresponsive player it used to hit delay() and crash.
+    // Keep this whole path yield-free: use a non-yielding busy wait for the gap.
     for (uint8_t attempt = 0; attempt < XY_ACK_MAX_RETRIES; attempt++) {
         drainRx();                       // clear stale RX bytes before send
         sendFrame(cmd, data, len);
@@ -183,7 +190,10 @@ bool XYPlayerController::sendFrameWithAck(uint8_t cmd, const uint8_t* data, uint
         }
         Serial.printf("[XY] no ACK (attempt %d/%d)\n",
                       attempt + 1, XY_ACK_MAX_RETRIES);
-        delay(XY_ACK_RETRY_GAP_MS);
+        // Non-yielding inter-retry gap (see note at top of function). Must not
+        // call delay()/yield() — unsafe when invoked from the ESP-NOW callback.
+        uint32_t gapDeadline = millis() + XY_ACK_RETRY_GAP_MS;
+        while ((int32_t)(millis() - gapDeadline) < 0) { /* spin, no yield */ }
     }
     Serial.println(F("[XY] WARNING: command not ACK'd after all retries"));
     return false;
