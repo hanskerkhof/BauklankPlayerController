@@ -28,12 +28,18 @@
 #endif
 
 // ── ACK settings ─────────────────────────────────────────────────────────────
-// Set to true to enable ACK-based retry for every command sent to the XY-V17B.
-// The module sends 0xAA 0xFF ... after each accepted command. If no ACK arrives
-// within XY_ACK_TIMEOUT_MS the command is resent up to XY_ACK_MAX_RETRIES times.
-// Disable if RX is not wired or for lower latency at the cost of reliability.
+// IMPORTANT: keep this false for the XY-V17B.
+// Per the XY-V17B datasheet, control/setting commands (Play, Stop, Set Volume,
+// Specified Song, Switch Drive, ...) return NOTHING — only Query commands send a
+// response, and none of them is the 0xAA 0xFF frame waitForAck() looks for. So
+// the ACK can never arrive for normal playback commands: every command would
+// time out all XY_ACK_MAX_RETRIES attempts and get re-sent 3x ~170 ms apart,
+// re-triggering "Specified Song" mid file-open and intermittently failing to
+// play. Fire-and-forget (this flag = false) matches the protocol and how the
+// rock-solid MDPlayerController works. Only enable for a module that genuinely
+// ACKs with 0xAA 0xFF.
 #ifndef XY_ACK_ENABLED
-  #define XY_ACK_ENABLED true
+  #define XY_ACK_ENABLED false
 #endif
 
 class XYPlayerController : public PlayerController {

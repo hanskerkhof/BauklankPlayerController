@@ -245,7 +245,10 @@ void PlayerController::fadeIn(int durationMs, int targetVolume, int playTrackInd
     // Call the virtual function to play the track
     playTrack(playTrackIndex, trackDurationMs, trackName);
 //    Serial.printf("  !-> After playing the track\n");
-    delay(60); // give some time to start the sound
+    // Non-yielding "give the sound time to start" gap. Must not call
+    // delay()/yield(): fadeIn() can run from the ESP-NOW receive callback
+    // (SYS context on ESP8266), where esp_yield() is illegal and reboots.
+    { uint32_t startGap = millis() + 60; while ((int32_t)(millis() - startGap) < 0) { /* spin, no yield */ } }
 //    Serial.printf("  !-> After the delay sound should have started\n");
 
      DEBUG_PRINT(DebugLevel::COMMANDS | DebugLevel::FADE, "%s - FadeDirection: %d", __PRETTY_FUNCTION__, fadeDirection);
@@ -603,17 +606,26 @@ void PlayerController::flushPendingIfReadyBase_() {
 }
 
 void PlayerController::executePlayerCommandNowBase(uint8_t type, uint16_t a, uint16_t b) {
+  // NOTE: this can run inside the ESP-NOW receive callback (SYS context on
+  // ESP8266) — a FE play/stop arrives as a cmd message and routes here. In that
+  // context Arduino delay()/yield() call esp_yield(), which is illegal and
+  // reboots the board. It only bit when commands arrived faster than the pacing
+  // gap (e.g. mashing play < the ~200 ms afterPlayGap), so the wait loop ran and
+  // hit delay(); slow commands skipped the loop entirely. Use non-yielding busy
+  // waits so the pacing is identical but safe from any context. The spin is
+  // bounded by the pacing gap (tens to a few hundred ms), well under the WDT.
+
   // Drain any previously queued command first to preserve wire-order semantics.
   while (_pendingType != 0) {
     flushPendingIfReadyBase_();
     if (_pendingType != 0) {
-      delay(1);
+      /* spin, no yield (see note above) */
     }
   }
 
   // Respect command pacing gap for direct deterministic send.
   while ((int32_t)(millis() - _nextReadyMs) < 0) {
-    delay(1);
+    /* spin, no yield (see note above) */
   }
 
   const uint32_t now = millis();
