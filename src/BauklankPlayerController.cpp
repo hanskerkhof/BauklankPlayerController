@@ -181,8 +181,27 @@ void PlayerController::playSoundSetStatus(int track, unsigned long durationMs, c
   displayPlayerStatusBox();
 }
 
+void PlayerController::schedulePlay(int track, unsigned long durationMs,
+                                   const char* trackName, int volume,
+                                   uint32_t countdownMs) {
+    // last-wins, mirror the syncTrigger arming order (clear -> set)
+    _syncPlayPending  = false;
+    _syncPlayTrack    = track;
+    _syncPlayDuration = durationMs;
+    _syncPlayName     = trackName;   // static/flash pointer (see header note)
+    _syncPlayVolume   = volume;
+    _syncPlayFireAtMs = millis() + countdownMs;
+    _syncPlayPending  = true;
+    DEBUG_PRINT(DebugLevel::COMMANDS, "⏱️ %s - schedulePlay track=%d in %lu ms", __PRETTY_FUNCTION__, track, (unsigned long)countdownMs);
+}
+
+void PlayerController::cancelScheduledPlay() {
+    _syncPlayPending = false;
+}
+
 void PlayerController::stopSoundSetStatus() {
     // TODO create a private method to reset the track when it is stopped
+    _syncPlayPending = false; // cancel any pending scheduled play on stop
     playerStatus = STATUS_STOPPED;
     currentTrack = 0;
     currentTrackName = "";
@@ -638,6 +657,18 @@ void PlayerController::executePlayerCommandNowBase(uint8_t type, uint16_t a, uin
 
 void PlayerController::update() {
     unsigned long currentTime = millis();
+
+    // Deferred/scheduled play (syncPlaySound). Overflow-safe deadline check,
+    // identical to the syncTrigger pattern. Runs first so the freshly-started
+    // track's playStartTime/playDuration are evaluated on subsequent loops.
+    if (_syncPlayPending && (currentTime - _syncPlayFireAtMs) < 0x80000000UL) {
+        _syncPlayPending = false;            // clear before play => no double-fire
+        if (isFading()) stopFade(/*stopSound=*/false);  // match live playSound path
+        if (_syncPlayVolume >= 0) setVolume(_syncPlayVolume);
+        playTrack(_syncPlayTrack, _syncPlayDuration, _syncPlayName);
+        DEBUG_PRINT(DebugLevel::COMMANDS, "⏱️▶️ %s - syncPlaySound fired track=%d", __PRETTY_FUNCTION__, _syncPlayTrack);
+    }
+
     // Define a static variable lastPlayerStatus to store the last player status
     // This variable retains its value between function calls
     // It is only accessible within this update() method

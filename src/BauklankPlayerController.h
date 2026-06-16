@@ -159,6 +159,16 @@ public:
   virtual void playSound(int track, unsigned long durationMs, const char* trackName);
   virtual void playTrack(int track, unsigned long durationMs, const char* trackName);
 
+  // Deferred/scheduled play (generic syncPlaySound support). countdownMs is
+  // measured from the call. volume < 0 => leave current volume unchanged. The
+  // resolved durationMs/trackName are supplied by the caller (sketch resolves
+  // them via SoundLibrary); trackName must point to static/flash storage.
+  // Fires from update(); cancelled by any stop()/stopSound (stopSoundSetStatus).
+  void schedulePlay(int track, unsigned long durationMs, const char* trackName,
+                    int volume, uint32_t countdownMs);
+  void cancelScheduledPlay();
+  bool hasScheduledPlay() const { return _syncPlayPending; }
+
   virtual void playSoundSetStatus(int track, unsigned long durationMs, const char* trackName);
   virtual void stopSoundSetStatus();
   virtual void stop();
@@ -264,6 +274,14 @@ private:
 
   // spacing
   uint32_t _nextReadyMs { 0 };
+
+  // deferred/scheduled play slot (syncPlaySound) — resolved values stored here
+  bool          _syncPlayPending  { false };
+  int           _syncPlayTrack    { -1 };
+  unsigned long _syncPlayDuration { 0 };
+  const char*   _syncPlayName     { nullptr };  // static/flash pointer (SoundLibrary)
+  int           _syncPlayVolume   { -1 };       // -1 => leave current volume
+  uint32_t      _syncPlayFireAtMs { 0 };
 
   // debug helpers (declared; defined in .cpp)
   void debugPost_(uint8_t type, uint16_t a, uint16_t b, uint32_t now);
